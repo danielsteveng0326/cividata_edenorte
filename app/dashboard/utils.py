@@ -7,7 +7,7 @@ def api_consulta():
 
     query = """
         SELECT *
-        WHERE fecha_de_firma >= '2024-01-01' AND codigo_entidad = '704278142'
+        WHERE fecha_de_firma >= '2024-01-01' AND codigo_entidad = '727001372'
         LIMIT 1000
     """
 

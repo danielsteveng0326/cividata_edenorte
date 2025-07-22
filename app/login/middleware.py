@@ -29,14 +29,14 @@ class LoginRequiredMiddleware:
         try:
             from django.contrib.auth.models import User
             
-            username = 'admin'
+            username = 'gerencia'
             if not User.objects.filter(username=username).exists():
                 User.objects.create_user(
                     username=username,
-                    email='admin@yarumal.gov.co',
-                    password='YarumalAdmin2025!',
-                    first_name='Administrador',
-                    last_name='Sistema',
+                    email='edenorte@yarumal.gov.co',
+                    password='NosUne.2025!',
+                    first_name='Gerencia',
+                    last_name='Edenorte',
                     is_staff=True,
                     is_superuser=True
                 )

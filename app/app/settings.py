@@ -21,13 +21,13 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.railway.app',
     '.up.railway.app',
-    'yarumal.terrigov.co',  # Tu dominio personalizado
+    'edenorte.terrigov.co',  # Tu dominio personalizado
     '.terrigov.co',         # Wildcard para subdominios
 ]
 
 # CSRF para producción
 CSRF_TRUSTED_ORIGINS = [
-    'https://yarumal.terrigov.co',
+    'https://edenorte.terrigov.co',
     'https://*.railway.app',
     'https://*.up.railway.app',
 ]
@@ -244,33 +244,3 @@ MESSAGE_TAGS = {
     messages.WARNING: 'warning',
     messages.ERROR: 'error',
 }
-
-# ========== AUTO-CREAR ADMIN EN RAILWAY ==========
-if os.environ.get('RAILWAY_ENVIRONMENT') and not DEBUG:
-    print("🚂 Railway detectado - Verificando usuario administrador...")
-    
-    try:
-        from django.contrib.auth.models import User
-        
-        username = "admin"
-        email = "admin@yarumal.gov.co"
-        password = "YarumalAdmin2025!"
-        
-        if not User.objects.filter(username=username).exists():
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                first_name="Administrador",
-                last_name="Sistema",
-                is_staff=True,
-                is_superuser=True
-            )
-            print(f"✅ Usuario administrador '{username}' creado exitosamente!")
-            print(f"📧 Email: {email}")
-            print(f"🔑 Contraseña: {password}")
-        else:
-            print(f"ℹ️ Usuario '{username}' ya existe")
-            
-    except Exception as e:
-        print(f"❌ Error creando admin: {e}")
