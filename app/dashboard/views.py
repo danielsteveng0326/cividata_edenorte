@@ -23,7 +23,7 @@ from django.contrib.auth.decorators import login_required
 #municipio de yarumal = 704278142
 #concejo de yarumal = 724167465
 
-codigo_ent = 704278142
+codigo_ent = 727001372
 annoinicial=2025
 annofinal=2025
 
@@ -225,26 +225,60 @@ def expirededur(request):
 
 @login_required
 def api(request):
-    # Obtener datos de la API
-    response = api_consulta()
+    """Vista corregida para procesar datos de la API"""
+    print("🚀 Iniciando proceso de consulta API...")
     
-    if response['status'] == 'success':
-        # Convertir el JSON string a lista de diccionarios
-        contratos_data = json.loads(response['data'])
-        # Procesar los datos de la API
-        nuevos, actualizados, errores = process_api_data(contratos_data)
+    try:
+        # Obtener datos de la API
+        response = api_consulta()
         
-        # Obtener la lista actualizada de contratos
-        list = Contrato.objects.all()
+        if response['status'] == 'success':
+            print("✅ API respondió exitosamente")
+            
+            # Convertir el JSON string a lista de diccionarios
+            contratos_data = json.loads(response['data'])
+            print(f"📊 Total de contratos recibidos de la API: {len(contratos_data)}")
+            
+            # Procesar los datos de la API
+            nuevos, actualizados, errores = process_api_data(contratos_data)
+            
+            print(f"📈 Resultados del procesamiento:")
+            print(f"   - Nuevos: {nuevos}")
+            print(f"   - Actualizados: {actualizados}")
+            print(f"   - Errores: {errores}")
+            
+            # Obtener la lista actualizada de contratos
+            list = Contrato.objects.filter(codigo_entidad=codigo_ent).order_by('-fecha_de_firma')[:50]
+            
+            return render(request, 'api.html', {
+                "list": list,
+                "db_response": (nuevos, actualizados, errores),
+                "success": True,
+                "total_procesados": len(contratos_data),
+                "message": f"Procesamiento completado: {nuevos} nuevos, {actualizados} actualizados, {errores} errores"
+            })
+            
+        elif response['status'] == 'no_data':
+            print("⚠️ No se encontraron datos en la API")
+            return render(request, 'api.html', {
+                "error": "No se encontraron contratos nuevos en la API para el período consultado",
+                "success": False
+            })
+            
+        else:
+            print(f"❌ Error en API: {response.get('message')}")
+            return render(request, 'api.html', {
+                "error": response['message'],
+                "success": False
+            })
+            
+    except Exception as e:
+        print(f"❌ Error crítico en vista API: {str(e)}")
+        import traceback
+        traceback.print_exc()
         
         return render(request, 'api.html', {
-            "list": list,
-            "db_response": (nuevos, actualizados, errores),
-            "success": True
-        })
-    else:
-        return render(request, 'api.html', {
-            "error": response['message'],
+            "error": f"Error interno del servidor: {str(e)}",
             "success": False
         })
 
