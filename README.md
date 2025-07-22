@@ -1,12 +1,12 @@
 # unitygov
 
-UnityGov
+CiviData
 
-Plataforma integral para la gestión de entidades públicas
+Centro Integral de Visualización Inteligente
 
 🌐 Descripción
 
-UnityGov es una plataforma modular desarrollada en Python y Django que busca mejorar la toma de decisiones en entidades públicas mediante la integración de tecnología, datos y automatización. Facilita la contratación, la ejecución de proyectos, el seguimiento del plan de desarrollo, la gestión de calidad y el acceso a observatorios y geoportales.
+CiviData es una plataforma modular desarrollada en Python y Django que busca mejorar la toma de decisiones en entidades públicas mediante la integración de tecnología, datos y automatización. Facilita la contratación, la ejecución de proyectos, el seguimiento del plan de desarrollo, la gestión de calidad y el acceso a observatorios y geoportales.
 
 📚 Características principales
 
