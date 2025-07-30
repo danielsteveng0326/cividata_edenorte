@@ -1,0 +1,91 @@
+<!-- app/docs_contractual/templates/docs_contractual/historial.html -->
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Content Header -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1><i class="fas fa-history text-info mr-2"></i>Historial de Documentos</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="/contratacion/">Inicio</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'docs_contractual:index' %}">Docs Contractual</a></li>
+          <li class="breadcrumb-item active">Historial</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-list mr-2"></i>Documentos Generados
+            </h3>
+            <div class="card-tools">
+              <a href="{% url 'docs_contractual:index' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i>Generar Nuevo
+              </a>
+            </div>
+          </div>
+          <div class="card-body">
+            {% if historial %}
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>Contrato</th>
+                    <th>Usuario</th>
+                    <th>Archivo Generado</th>
+                    <th>Fecha de Generación</th>
+                    <th>Plantilla Usada</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in historial %}
+                  <tr>
+                    <td><strong>{{ item.contrato_referencia }}</strong></td>
+                    <td>
+                      <i class="fas fa-user mr-1"></i>{{ item.usuario }}
+                    </td>
+                    <td>
+                      <i class="fas fa-file-word text-primary mr-1"></i>
+                      {{ item.nombre_archivo_generado }}
+                    </td>
+                    <td>
+                      <span class="badge badge-info">
+                        {{ item.fecha_generacion|date:"d/m/Y H:i" }}
+                      </span>
+                    </td>
+                    <td>{{ item.plantilla_usada.nombre|default:"Plantilla por defecto" }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-5">
+              <i class="fas fa-file-word fa-3x mb-3"></i>
+              <h5>No hay documentos generados</h5>
+              <p>Aún no se han generado documentos en este módulo.</p>
+              <a href="{% url 'docs_contractual:index' %}" class="btn btn-primary">
+                <i class="fas fa-plus mr-1"></i>Generar Primer Documento
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

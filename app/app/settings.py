@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'dashboard',
     'login',
     'chatbot',
+    'docs_contractual',
 ]
 
 MIDDLEWARE = [

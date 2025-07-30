@@ -1,4 +1,4 @@
-# app/app/urls.py - Versión actualizada con login
+# app/app/urls.py - Agregar la nueva ruta
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
@@ -26,9 +26,10 @@ urlpatterns = [
     
     # URLs principales
     path('admin/', admin.site.urls),
-    path('login/', include('login.urls')),  # ← ACTIVADO
+    path('login/', include('login.urls')),
     path('contratacion/', include('dashboard.urls')),
     path('chat/', include('chatbot.urls')),
+    path('docs-contractual/', include('docs_contractual.urls')),  # ← NUEVA RUTA
 ]
 
 # Manejo de errores

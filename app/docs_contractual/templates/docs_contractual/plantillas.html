@@ -1,0 +1,279 @@
+<!-- app/docs_contractual/templates/docs_contractual/plantillas.html -->
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Content Header -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1><i class="fas fa-file-alt text-info mr-2"></i>Gestión de Plantillas</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="/contratacion/">Inicio</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'docs_contractual:index' %}">Docs Contractual</a></li>
+          <li class="breadcrumb-item active">Plantillas</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    
+    <!-- Estado de la plantilla -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="card {% if plantilla_existe %}card-success{% else %}card-warning{% endif %}">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-{% if plantilla_existe %}check-circle{% else %}exclamation-triangle{% endif %} mr-2"></i>
+              Estado de la Plantilla
+            </h3>
+          </div>
+          <div class="card-body">
+            {% if plantilla_existe %}
+              <div class="alert alert-success">
+                <h5><i class="icon fas fa-check"></i> ¡Plantilla encontrada!</h5>
+                La plantilla Word está correctamente ubicada en: <code>{{ plantilla_path }}</code>
+              </div>
+            {% else %}
+              <div class="alert alert-warning">
+                <h5><i class="icon fas fa-exclamation-triangle"></i> Plantilla no encontrada</h5>
+                <p>No se encontró la plantilla Word en: <code>{{ plantilla_path }}</code></p>
+                <p><strong>Nota:</strong> Se utilizará la generación automática de documentos hasta que se cree la plantilla.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instrucciones para crear plantilla -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="card card-info">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-lightbulb mr-2"></i>Cómo crear una plantilla Word
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <h5>Pasos para crear la plantilla:</h5>
+            <ol>
+              <li><strong>Crear directorio:</strong> Asegúrate de que existe el directorio <code>app/docs_contractual/templates/documents/</code></li>
+              <li><strong>Crear documento Word:</strong> Abre Microsoft Word y crea un nuevo documento</li>
+              <li><strong>Diseñar el formato:</strong> Agrega logos, encabezados, tablas y el formato que prefieras</li>
+              <li><strong>Insertar marcadores:</strong> Usa las variables mostradas abajo en el lugar donde quieres que aparezcan los datos</li>
+              <li><strong>Guardar:</strong> Guarda el archivo como <code>plantilla_designacion.docx</code> en el directorio especificado</li>
+              <li><strong>Reiniciar:</strong> Reinicia el servidor Django para que detecte la nueva plantilla</li>
+            </ol>
+            
+            <div class="alert alert-info mt-3">
+              <h6><i class="fas fa-info-circle mr-2"></i>Consejo profesional:</h6>
+              <p class="mb-0">Puedes incluir logos institucionales, formatos especiales, colores corporativos, 
+              y cualquier diseño que necesites. La plantilla se usará como base y solo se reemplazarán las variables.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variables disponibles -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-code mr-2"></i>Variables Disponibles
+            </h3>
+          </div>
+          <div class="card-body">
+            <p>Usa estas variables en tu plantilla Word. Serán reemplazadas automáticamente con los datos del contrato:</p>
+            
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th width="20%">Variable</th>
+                    <th width="40%">Descripción</th>
+                    <th width="40%">Ejemplo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>{{w_fecha}}</code></td>
+                    <td>Fecha de firma del contrato</td>
+                    <td>15 de marzo de 2025</td>
+                  </tr>
+                  <tr>
+                    <td><code>{{w_contrato}}</code></td>
+                    <td>Referencia del contrato</td>
+                    <td>CPS-005-2025</td>
+                  </tr>
+                  <tr>
+                    <td><code>{{w_tipo}}</code></td>
+                    <td>Tipo de contrato</td>
+                    <td>Contrato de Prestación de Servicios</td>
+                  </tr>
+                  <tr>
+                    <td><code>{{w_contratista}}</code></td>
+                    <td>Nombre del proveedor</td>
+                    <td>EMPRESA CONSTRUCTORA S.A.S</td>
+                  </tr>
+                  <tr>
+                    <td><code>{{w_tipodoc}}</code></td>
+                    <td>Tipo de documento del proveedor</td>
+                    <td>NIT</td>
+                  </tr>
+                  <tr>
+                    <td><code>{{w_id}}</code></td>
+                    <td>Número de documento</td>
+                    <td>900123456-1</td>
+                  </tr>
+                  <tr>
+                    <td><code>{{w_objeto}}</code></td>
+                    <td>Objeto del contrato</td>
+                    <td>Suministro de materiales de construcción</td>
+                  </tr>
+                  <tr>
+                    <td><code>{{w_valor}}</code></td>
+                    <td>Valor del contrato</td>
+                    <td>$50,000,000</td>
+                  </tr>
+                  <tr>
+                    <td><code>{{w_plazo}}</code></td>
+                    <td>Duración del contrato</td>
+                    <td>3 meses</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="mt-3">
+              <h6>Ejemplo de uso en la plantilla:</h6>
+              <div class="bg-light p-3 rounded">
+                <code>
+                  CONTRATO: {{w_contrato}}<br>
+                  CONTRATISTA: {{w_contratista}}<br>
+                  VALOR: {{w_valor}}<br>
+                  OBJETO: {{w_objeto}}
+                </code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ejemplo de plantilla -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-secondary">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-file-word mr-2"></i>Ejemplo de Plantilla
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="bg-white border p-4 rounded" style="font-family: 'Times New Roman', serif;">
+              <div class="text-center mb-4">
+                <h3><strong>DESIGNACIÓN DE SUPERVISOR</strong></h3>
+              </div>
+              
+              <p>En cumplimiento de lo establecido en el artículo 84 de la Ley 1474 de 2011 (Estatuto Anticorrupción), 
+              se designa supervisor para el contrato que a continuación se relaciona:</p>
+              
+              <div class="mt-4 mb-4">
+                <h5><strong>INFORMACIÓN DEL CONTRATO</strong></h5>
+                <table class="table table-bordered mt-3">
+                  <tr>
+                    <td width="30%"><strong>FECHA DE FIRMA:</strong></td>
+                    <td><code>{{w_fecha}}</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CONTRATO:</strong></td>
+                    <td><code>{{w_contrato}}</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>TIPO:</strong></td>
+                    <td><code>{{w_tipo}}</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CONTRATISTA:</strong></td>
+                    <td><code>{{w_contratista}}</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>IDENTIFICACIÓN:</strong></td>
+                    <td><code>{{w_tipodoc}} {{w_id}}</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>OBJETO:</strong></td>
+                    <td><code>{{w_objeto}}</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>VALOR:</strong></td>
+                    <td><code>{{w_valor}}</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>PLAZO:</strong></td>
+                    <td><code>{{w_plazo}}</code></td>
+                  </tr>
+                </table>
+              </div>
+              
+              <p>La presente designación se realiza de conformidad con la normatividad vigente.</p>
+              
+              <div class="mt-5">
+                <div class="row">
+                  <div class="col-6 text-center">
+                    <div style="border-bottom: 1px solid black; width: 80%; margin: 0 auto;"></div>
+                    <p class="mt-2"><strong>ORDENADOR DEL GASTO</strong></p>
+                  </div>
+                  <div class="col-6 text-center">
+                    <div style="border-bottom: 1px solid black; width: 80%; margin: 0 auto;"></div>
+                    <p class="mt-2"><strong>SUPERVISOR DESIGNADO</strong></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="alert alert-success mt-3">
+              <h6><i class="fas fa-download mr-2"></i>¿Quieres usar este ejemplo?</h6>
+              <p class="mb-2">Puedes copiar este formato, pegarlo en Word, y guardarlo como plantilla.</p>
+              <small class="text-muted">Recuerda reemplazar los códigos de ejemplo con las variables reales (incluyendo las dobles llaves).</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="row">
+      <div class="col-12 text-center">
+        <a href="{% url 'docs_contractual:index' %}" class="btn btn-primary mr-2">
+          <i class="fas fa-arrow-left mr-1"></i>Volver a Docs Contractual
+        </a>
+        <a href="{% url 'docs_contractual:historial' %}" class="btn btn-info">
+          <i class="fas fa-history mr-1"></i>Ver Historial
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
