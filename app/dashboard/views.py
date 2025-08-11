@@ -4,12 +4,12 @@ from django.views.generic import ListView
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from datetime import timedelta, datetime, date
-from .models import Contrato
+from .models import Contrato, ContratoInteradministrativo
 from django.db.models import Sum, Count, Q, Value, DateField
 from django.db.models.functions import ExtractMonth, ExtractYear
 from django.http import JsonResponse, HttpResponse
-from .db import process_api_data
-from .utils import api_consulta
+from .db import process_api_data, process_interadmin_api_data
+from .utils import api_consulta, api_consulta_interadministrativos
 from django.db.models.functions import Coalesce
 from django.db.models import Value
 import json
@@ -214,12 +214,14 @@ def expired(request):
 
 @login_required
 def expirededur(request):
+    """Vista actualizada para mostrar contratos interadministrativos"""
     fecha_actual = date.today() - timedelta(days=2)
     
-    expired_contract2 = Contrato.objects.filter(
-        fecha_de_fin_del_contrato__gte=fecha_actual,
+    # Cambiar a usar el modelo ContratoInteradministrativo
+    expired_contract2 = ContratoInteradministrativo.objects.filter(
+        fecha_fin_ejecuci_n__gte=fecha_actual,
         documento_proveedor='901831522'
-    ).order_by('fecha_de_fin_del_contrato')
+    ).order_by('fecha_fin_ejecuci_n')
     
     return render(request, 'table_expedur.html', {"expired_contract2": expired_contract2})
 
@@ -281,6 +283,68 @@ def api(request):
             "error": f"Error interno del servidor: {str(e)}",
             "success": False
         })
+
+@login_required
+def api_interadministrativos(request):
+    """Nueva vista para procesar datos de la API de interadministrativos"""
+    print("🚀 Iniciando proceso de consulta API interadministrativos...")
+    
+    try:
+        # Obtener datos de la API de interadministrativos
+        response = api_consulta_interadministrativos()
+        
+        if response['status'] == 'success':
+            print("✅ API de interadministrativos respondió exitosamente")
+            
+            # Convertir el JSON string a lista de diccionarios
+            contratos_data = json.loads(response['data'])
+            print(f"📊 Total de contratos interadministrativos recibidos: {len(contratos_data)}")
+            
+            # Procesar los datos de la API
+            nuevos, actualizados, errores = process_interadmin_api_data(contratos_data)
+            
+            print(f"📈 Resultados del procesamiento interadministrativos:")
+            print(f"   - Nuevos: {nuevos}")
+            print(f"   - Actualizados: {actualizados}")
+            print(f"   - Errores: {errores}")
+            
+            # Obtener la lista actualizada de contratos interadministrativos
+            list_interadmin = ContratoInteradministrativo.objects.filter(
+                documento_proveedor='901831522'
+            ).order_by('-fecha_de_firma_del_contrato')[:50]
+            
+            return render(request, 'api_interadmin.html', {
+                "list": list_interadmin,
+                "db_response": (nuevos, actualizados, errores),
+                "success": True,
+                "total_procesados": len(contratos_data),
+                "message": f"Procesamiento interadministrativos completado: {nuevos} nuevos, {actualizados} actualizados, {errores} errores"
+            })
+            
+        elif response['status'] == 'no_data':
+            print("⚠️ No se encontraron datos en la API de interadministrativos")
+            return render(request, 'api_interadmin.html', {
+                "error": "No se encontraron contratos interadministrativos nuevos en la API para el período consultado",
+                "success": False
+            })
+            
+        else:
+            print(f"❌ Error en API interadministrativos: {response.get('message')}")
+            return render(request, 'api_interadmin.html', {
+                "error": response['message'],
+                "success": False
+            })
+            
+    except Exception as e:
+        print(f"❌ Error crítico en vista API interadministrativos: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return render(request, 'api_interadmin.html', {
+            "error": f"Error interno del servidor: {str(e)}",
+            "success": False
+        })
+
 
 @login_required
 def consulta(request):

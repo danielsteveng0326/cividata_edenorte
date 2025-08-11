@@ -89,3 +89,74 @@ class Contrato(models.Model):
 
     def __str__(self):
         return f"{self.id_contrato} - {self.nombre_entidad}"
+
+class ContratoInteradministrativo(models.Model):
+    """
+    Modelo para almacenar datos de contratos interadministrativos de SECOP
+    """
+    # Información de la Entidad
+    nivel_entidad = models.CharField(max_length=100, blank=True)
+    codigo_entidad_en_secop = models.CharField(max_length=50, blank=True)
+    nombre_de_la_entidad = models.CharField(max_length=255, blank=True)
+    nit_de_la_entidad = models.CharField(max_length=50, blank=True)
+    departamento_entidad = models.CharField(max_length=100, blank=True)
+    municipio_entidad = models.CharField(max_length=100, blank=True)
+    
+    # Estado y Modalidad del Proceso
+    estado_del_proceso = models.CharField(max_length=100, blank=True)
+    modalidad_de_contrataci_n = models.CharField(max_length=100, blank=True)
+    
+    # Objeto del Contrato
+    objeto_a_contratar = models.TextField(blank=True)
+    objeto_del_proceso = models.TextField(blank=True)
+    tipo_de_contrato = models.CharField(max_length=100, blank=True)
+    
+    # Fechas importantes
+    fecha_de_firma_del_contrato = models.DateField(null=True, blank=True)
+    fecha_inicio_ejecuci_n = models.DateField(null=True, blank=True)
+    fecha_fin_ejecuci_n = models.DateField(null=True, blank=True)
+    
+    # Identificadores
+    numero_del_contrato = models.CharField(max_length=100, blank=True)
+    numero_de_proceso = models.CharField(max_length=100, unique=True)  # Clave única
+    
+    # Valor del contrato
+    valor_contrato = models.BigIntegerField(default=0)
+    
+    # Información del contratista
+    nom_raz_social_contratista = models.CharField(max_length=255, blank=True)
+    tipo_documento_proveedor = models.CharField(max_length=50, blank=True)
+    documento_proveedor = models.CharField(max_length=50, blank=True)
+    
+    # Información adicional
+    url_contrato = models.URLField(max_length=500, blank=True)
+    origen = models.CharField(max_length=50, blank=True)  # SECOP I o SECOP II
+    
+    # Campos de control
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Contrato Interadministrativo"
+        verbose_name_plural = "Contratos Interadministrativos"
+        ordering = ['-fecha_de_firma_del_contrato']
+        
+    def __str__(self):
+        return f"{self.numero_de_proceso} - {self.nom_raz_social_contratista}"
+        
+    def dias_restantes(self):
+        """Calcula los días restantes hasta la fecha de fin de ejecución"""
+        if self.fecha_fin_ejecuci_n:
+            from datetime import date
+            today = date.today()
+            diff = (self.fecha_fin_ejecuci_n - today).days
+            return diff
+        return None
+        
+    def get_origen_display(self):
+        """Convierte el origen a un formato más legible"""
+        if self.origen and 'secopii' in self.origen.lower():
+            return "SECOP II"
+        elif self.origen and 'secopi' in self.origen.lower():
+            return "SECOP I"
+        return self.origen

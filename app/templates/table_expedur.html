@@ -31,7 +31,7 @@
             <div class="info-box bg-danger">
               <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
               <div class="info-box-content">
-                <span class="info-box-text">(≤5 días)</span>
+                <span class="info-box-text">Críticos (≤5 días)</span>
                 <span class="info-box-number" id="criticos-count">0</span>
               </div>
             </div>
@@ -40,7 +40,7 @@
             <div class="info-box bg-warning">
               <span class="info-box-icon"><i class="fas fa-clock"></i></span>
               <div class="info-box-content">
-                <span class="info-box-text">(6-15 días)</span>
+                <span class="info-box-text">Próximos (6-15 días)</span>
                 <span class="info-box-number" id="proximos-count">0</span>
               </div>
             </div>
@@ -49,7 +49,7 @@
             <div class="info-box bg-success">
               <span class="info-box-icon"><i class="fas fa-check"></i></span>
               <div class="info-box-content">
-                <span class="info-box-text">(>15 días)</span>
+                <span class="info-box-text">Normales (>15 días)</span>
                 <span class="info-box-number" id="normal-count">0</span>
               </div>
             </div>
@@ -87,52 +87,89 @@
                 <thead class="thead-dark">
                   <tr>
                     <th width="15%">
-                      <i class="fas fa-hashtag mr-1"></i>Contrato N°
+                      <i class="fas fa-hashtag mr-1"></i>Proceso N°
                     </th>
                     <th width="10%">
                       <i class="fas fa-link mr-1"></i>URL
                     </th>
                     <th width="15%">
-                      <i class="fas fa-calendar-alt mr-1"></i>Fecha Fin
+                      <i class="fas fa-calendar-alt mr-1"></i>Fecha Fin Ejecución
                     </th>
                     <th width="10%">
-                      <i class="fas fa-clock mr-1"></i>Días Rest.
+                      <i class="fas fa-clock mr-1"></i>Días Restantes
                     </th>
-                    <th width="50%">
-                      <i class="fas fa-user-tie mr-1"></i>Contratista
+                    <th width="10%">
+                      <i class="fas fa-database mr-1"></i>Origen
+                    </th>
+                    <th width="15%">
+                      <i class="fas fa-map-marker-alt mr-1"></i>Municipio
+                    </th>
+                    <th width="25%">
+                      <i class="fas fa-building mr-1"></i>Contratista
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for contrato in expired_contract2 %}
-                  <tr class="contrato-row" data-contrato-id="{{ forloop.counter }}">
+                  <tr class="contrato-row" data-proceso="{{ contrato.numero_de_proceso }}">
                     <td>
-                      <span class="badge badge-secondary">{{ contrato.referencia_del_contrato }}</span>
+                      <span class="font-weight-bold text-primary">{{ contrato.numero_de_proceso }}</span>
+                      <br>
+                      <small class="text-muted">{{ contrato.numero_del_contrato }}</small>
+                    </td>
+                    <td class="text-center">
+                      {% if contrato.url_contrato %}
+                        <a href="{{ contrato.url_contrato }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                          <i class="fas fa-external-link-alt"></i>
+                        </a>
+                      {% else %}
+                        <span class="text-muted">N/A</span>
+                      {% endif %}
                     </td>
                     <td>
-                      <a href="{{ contrato.url_proceso }}" target="_blank" 
-                         class="btn btn-outline-primary btn-sm" 
-                         title="Ver proceso en SECOP">
-                        <i class="fas fa-external-link-alt"></i>
-                      </a>
+                      {% if contrato.fecha_fin_ejecuci_n %}
+                        <span class="font-weight-bold">{{ contrato.fecha_fin_ejecuci_n|date:"d/m/Y" }}</span>
+                        <br>
+                        <small class="text-muted">
+                          Inicio: {{ contrato.fecha_inicio_ejecuci_n|date:"d/m/Y"|default:"N/A" }}
+                        </small>
+                      {% else %}
+                        <span class="text-muted">No definida</span>
+                      {% endif %}
                     </td>
-                    <td>
-                      <span class="fecha-fin">{{ contrato.fecha_de_fin_del_contrato|date:"d/m/Y" }}</span>
-                      <small class="d-block text-muted">{{ contrato.fecha_de_fin_del_contrato|date:"l" }}</small>
+                    <td class="text-center">
+                      {% if contrato.fecha_fin_ejecuci_n %}
+                        <span class="badge dias-restantes" data-fecha="{{ contrato.fecha_fin_ejecuci_n|date:'Y-m-d' }}">
+                          Calculando...
+                        </span>
+                      {% else %}
+                        <span class="badge badge-secondary">N/A</span>
+                      {% endif %}
                     </td>
-                    <td>
-                      <span class="dias-restantes badge" data-fecha="{{ contrato.fecha_de_fin_del_contrato|date:'Y-m-d' }}">
-                        <!-- Se calcula con JavaScript -->
+                    <td class="text-center">
+                      <span class="badge {% if contrato.get_origen_display == 'SECOP II' %}badge-info{% else %}badge-secondary{% endif %}">
+                        {{ contrato.get_origen_display|default:"N/A" }}
                       </span>
                     </td>
                     <td>
+                      <span class="font-weight-bold text-dark">{{ contrato.municipio_entidad|default:"N/A" }}</span>
+                      {% if contrato.departamento_entidad %}
+                        <br>
+                        <small class="text-muted">{{ contrato.departamento_entidad }}</small>
+                      {% endif %}
+                    </td>
+                    <td>
                       <div class="contratista-info">
-                        <button class="btn btn-link text-left p-0 contratista-btn" 
+                        <button class="btn btn-link p-0 contratista-btn text-left" 
                                 type="button" 
                                 data-toggle="collapse" 
                                 data-target="#objeto{{ forloop.counter }}" 
                                 aria-expanded="false">
-                          <strong>{{ contrato.proveedor_adjudicado|truncatechars:60 }}</strong>
+                          <span class="font-weight-bold">{{ contrato.nom_raz_social_contratista|truncatechars:30 }}</span>
+                          {% if contrato.documento_proveedor %}
+                            <br>
+                            <small class="text-muted">{{ contrato.tipo_documento_proveedor|default:"Doc" }}: {{ contrato.documento_proveedor }}</small>
+                          {% endif %}
                           <i class="fas fa-chevron-down ml-2 toggle-icon"></i>
                         </button>
                         
@@ -142,22 +179,31 @@
                             <h6 class="text-success">
                               <i class="fas fa-file-alt mr-2"></i>Objeto del Contrato:
                             </h6>
-                            <p class="mb-0 text-justify">{{ contrato.objeto_del_contrato }}</p>
+                            <p class="mb-0 text-justify">{{ contrato.objeto_a_contratar|default:"No especificado" }}</p>
                             
                             <!-- Información adicional -->
                             <hr class="my-2">
                             <div class="row">
                               <div class="col-md-6">
                                 <small class="text-muted">
-                                  <strong>Valor:</strong> ${{ contrato.valor_del_contrato|floatformat:0 }}
+                                  <strong>Valor:</strong> ${{ contrato.valor_contrato|floatformat:0 }}
                                 </small>
                               </div>
                               <div class="col-md-6">
                                 <small class="text-muted">
-                                  <strong>Estado:</strong> {{ contrato.estado_contrato }}
+                                  <strong>Estado:</strong> {{ contrato.estado_del_proceso|default:"N/A" }}
                                 </small>
                               </div>
                             </div>
+                            {% if contrato.tipo_de_contrato %}
+                            <div class="row mt-1">
+                              <div class="col-12">
+                                <small class="text-muted">
+                                  <strong>Tipo:</strong> {{ contrato.tipo_de_contrato }}
+                                </small>
+                              </div>
+                            </div>
+                            {% endif %}
                           </div>
                         </div>
                       </div>
@@ -165,10 +211,10 @@
                   </tr>
                   {% empty %}
                   <tr>
-                    <td colspan="5" class="text-center py-4">
+                    <td colspan="7" class="text-center py-4">
                       <div class="text-muted">
                         <i class="fas fa-inbox fa-3x mb-3"></i>
-                        <h5>No hay contratos Interadministrativos próximos a vencer</h5>
+                        <h5>No hay contratos interadministrativos próximos a vencer</h5>
                         <p>Todos los contratos están al día o ya han vencido.</p>
                       </div>
                     </td>
@@ -292,32 +338,33 @@ document.addEventListener('DOMContentLoaded', function() {
         let contadores = { criticos: 0, proximos: 0, normal: 0 };
         
         allRows.forEach(function(row) {
-            const fechaFinStr = row.querySelector('.dias-restantes').dataset.fecha;
+            const diasElement = row.querySelector('.dias-restantes');
+            if (!diasElement || !diasElement.dataset.fecha) return;
+            
+            const fechaFinStr = diasElement.dataset.fecha;
             const fechaFin = new Date(fechaFinStr);
             const hoy = new Date();
             const diffTime = fechaFin - hoy;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
-            const badgeElement = row.querySelector('.dias-restantes');
-            
             // Remover clases previas
             row.classList.remove('table-danger', 'table-warning', 'table-success');
-            badgeElement.classList.remove('badge-danger', 'badge-warning', 'badge-success');
+            diasElement.classList.remove('badge-danger', 'badge-warning', 'badge-success');
             
             if (diffDays <= 5) {
                 row.classList.add('table-danger');
-                badgeElement.classList.add('badge-danger');
-                badgeElement.textContent = diffDays <= 0 ? 'Vence Hoy' : diffDays + ' días';
+                diasElement.classList.add('badge-danger');
+                diasElement.textContent = diffDays <= 0 ? 'Vencido' : diffDays + ' días';
                 contadores.criticos++;
             } else if (diffDays <= 15) {
                 row.classList.add('table-warning');
-                badgeElement.classList.add('badge-warning');
-                badgeElement.textContent = diffDays + ' días';
+                diasElement.classList.add('badge-warning');
+                diasElement.textContent = diffDays + ' días';
                 contadores.proximos++;
             } else {
                 row.classList.add('table-success');
-                badgeElement.classList.add('badge-success');
-                badgeElement.textContent = diffDays + ' días';
+                diasElement.classList.add('badge-success');
+                diasElement.textContent = diffDays + ' días';
                 contadores.normal++;
             }
         });
@@ -331,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Función de paginación
     function showPage(page) {
         const startIndex = (page - 1) * recordsPerPage;
-        const endIndex = recordsPerPage === -1 ? totalRecords : startIndex + recordsPerPage;
+        const endIndex = recordsPerPage === -1 ? allRows.length : startIndex + recordsPerPage;
         
         allRows.forEach(function(row, index) {
             if (recordsPerPage === -1 || (index >= startIndex && index < endIndex)) {
@@ -342,14 +389,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Actualizar información de paginación
-        const showingStart = totalRecords === 0 ? 0 : startIndex + 1;
-        const showingEnd = Math.min(endIndex, totalRecords);
+        const showingStart = recordsPerPage === -1 ? 1 : startIndex + 1;
+        const showingEnd = recordsPerPage === -1 ? totalRecords : Math.min(endIndex, totalRecords);
         
         document.getElementById('showing-start').textContent = showingStart;
         document.getElementById('showing-end').textContent = showingEnd;
-        document.getElementById('total-records').textContent = totalRecords;
         
-        // Actualizar botones de navegación
+        // Habilitar/deshabilitar botones
         document.getElementById('prevPage').disabled = page === 1;
         document.getElementById('nextPage').disabled = recordsPerPage === -1 || endIndex >= totalRecords;
     }
@@ -379,9 +425,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar
     calcularDiasYColores();
     showPage(currentPage);
-    
-    // Actualizar cada minuto
-    setInterval(calcularDiasYColores, 60000);
 });
 </script>
+
 {% endblock %}

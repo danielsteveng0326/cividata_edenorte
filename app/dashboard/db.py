@@ -1,4 +1,4 @@
-from .models import Contrato
+from .models import Contrato, ContratoInteradministrativo  # Agregar import
 from django.utils import timezone
 from django.db import transaction
 from datetime import datetime, date
@@ -202,3 +202,144 @@ def process_api_data(contratos_data):
 
     print(f"📊 Resumen de procesamiento: {nuevos} nuevos, {actualizados} actualizados, {errores} errores")
     return nuevos, actualizados, errores
+
+
+def process_interadmin_api_data(contratos_data):
+    """
+    Procesa los datos de contratos interadministrativos recibidos de la API y los guarda en la base de datos.
+    
+    Args:
+        contratos_data (list): Lista de diccionarios con datos de contratos interadministrativos
+    
+    Returns:
+        tuple: (nuevos, actualizados, errores) - Conteo de registros procesados y errores
+    """
+    nuevos = 0
+    actualizados = 0
+    errores = 0
+    
+    def parse_date(date_string):
+        """
+        Parsea fechas y las convierte a objetos date para DateField
+        """
+        if not date_string:
+            return None
+        
+        try:
+            # Si la fecha viene con información de timezone (formato API)
+            if 'T' in date_string and date_string.endswith('Z'):
+                # Parsear fecha UTC
+                dt = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
+                # Convertir a Colombia timezone
+                colombia_tz = pytz.timezone('America/Bogota')
+                dt_colombia = dt.astimezone(colombia_tz)
+                # IMPORTANTE: Retornar solo la fecha (sin hora) para DateField
+                return dt_colombia.date()
+            
+            # Si es una fecha simple (YYYY-MM-DD) - formato típico de API
+            elif '-' in date_string and len(date_string) >= 10:
+                # Extraer solo la parte de fecha
+                fecha_str = date_string[:10]  # YYYY-MM-DD
+                dt = datetime.strptime(fecha_str, '%Y-%m-%d')
+                return dt.date()
+            
+            # Si es formato DD/MM/YYYY
+            elif '/' in date_string:
+                dt = datetime.strptime(date_string, '%d/%m/%Y')
+                return dt.date()
+            
+            return None
+            
+        except (ValueError, TypeError) as e:
+            print(f"❌ Error parseando fecha {date_string}: {e}")
+            return None
+
+    def clean_number(value):
+        """Convierte strings numéricos a enteros o 0 si son inválidos"""
+        if not value:
+            return 0
+        try:
+            # Limpiar caracteres especiales comunes en números
+            if isinstance(value, str):
+                value = value.replace(',', '').replace('$', '').replace(' ', '')
+            return int(float(value))  # float primero por si hay decimales
+        except (ValueError, TypeError):
+            return 0
+
+    def map_interadmin_data(data):
+        """Mapea los datos de la API al formato del modelo ContratoInteradministrativo"""
+        return {
+            'nivel_entidad': data.get('nivel_entidad', ''),
+            'codigo_entidad_en_secop': data.get('codigo_entidad_en_secop', ''),
+            'nombre_de_la_entidad': data.get('nombre_de_la_entidad', ''),
+            'nit_de_la_entidad': data.get('nit_de_la_entidad', ''),
+            'departamento_entidad': data.get('departamento_entidad', ''),
+            'municipio_entidad': data.get('municipio_entidad', ''),
+            
+            'estado_del_proceso': data.get('estado_del_proceso', ''),
+            'modalidad_de_contrataci_n': data.get('modalidad_de_contrataci_n', ''),
+            
+            'objeto_a_contratar': data.get('objeto_a_contratar', ''),
+            'objeto_del_proceso': data.get('objeto_del_proceso', ''),
+            'tipo_de_contrato': data.get('tipo_de_contrato', ''),
+            
+            # FECHAS
+            'fecha_de_firma_del_contrato': parse_date(data.get('fecha_de_firma_del_contrato')),
+            'fecha_inicio_ejecuci_n': parse_date(data.get('fecha_inicio_ejecuci_n')),
+            'fecha_fin_ejecuci_n': parse_date(data.get('fecha_fin_ejecuci_n')),
+            
+            'numero_del_contrato': data.get('numero_del_contrato', ''),
+            'numero_de_proceso': data.get('numero_de_proceso', ''),
+            
+            'valor_contrato': clean_number(data.get('valor_contrato')),
+            
+            'nom_raz_social_contratista': data.get('nom_raz_social_contratista', ''),
+            'tipo_documento_proveedor': data.get('tipo_documento_proveedor', ''),
+            'documento_proveedor': data.get('documento_proveedor', ''),
+            
+            'url_contrato': data.get('url_contrato', ''),
+            'origen': data.get('origen', ''),
+        }
+
+    # Procesar cada contrato de la lista
+    for contrato_data in contratos_data:
+        try:
+            with transaction.atomic():
+                numero_proceso = contrato_data.get('numero_de_proceso')
+                
+                if not numero_proceso:
+                    print(f"⚠️ Saltando registro sin número de proceso")
+                    errores += 1
+                    continue
+                
+                # Buscar si ya existe el contrato
+                contrato_existente = ContratoInteradministrativo.objects.filter(
+                    numero_de_proceso=numero_proceso
+                ).first()
+                
+                # Mapear los datos
+                datos_mapeados = map_interadmin_data(contrato_data)
+                
+                if contrato_existente:
+                    # Actualizar registro existente
+                    for campo, valor in datos_mapeados.items():
+                        setattr(contrato_existente, campo, valor)
+                    
+                    contrato_existente.save()
+                    actualizados += 1
+                    print(f"✅ Actualizado: {numero_proceso}")
+                    
+                else:
+                    # Crear nuevo registro
+                    nuevo_contrato = ContratoInteradministrativo(**datos_mapeados)
+                    nuevo_contrato.save()
+                    nuevos += 1
+                    print(f"🆕 Nuevo: {numero_proceso}")
+                    
+        except Exception as e:
+            print(f"❌ Error procesando contrato {contrato_data.get('numero_de_proceso', 'SIN_ID')}: {str(e)}")
+            errores += 1
+            continue
+    
+    print(f"📊 Procesamiento completado - Nuevos: {nuevos}, Actualizados: {actualizados}, Errores: {errores}")
+    return (nuevos, actualizados, errores)
