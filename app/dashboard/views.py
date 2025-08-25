@@ -432,3 +432,74 @@ class ContratoListView(ListView):
 @login_required
 def emilia(request):
     return render(request, '', {})
+
+
+
+class ContratoInteradministrativoListView(ListView):
+    model = ContratoInteradministrativo
+    template_name = 'table_interadmin_report.html'
+    context_object_name = 'contratos_interadmin'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get_queryset(self):
+        # Obtener parámetros de filtro desde GET y POST
+        ano_filtro = self.request.GET.get('ano', '') or self.request.POST.get('ano', '')
+        municipio_filtro = self.request.GET.get('municipio', '') or self.request.POST.get('municipio', '')
+        busqueda_filtro = self.request.GET.get('busqueda', '') or self.request.POST.get('busqueda', '')
+        
+        # Query base - solo contratos interadministrativos del proveedor
+        queryset = ContratoInteradministrativo.objects.filter(documento_proveedor='901831522')
+        
+        # Aplicar filtro de año si se especifica
+        if ano_filtro:
+            try:
+                ano = int(ano_filtro)
+                queryset = queryset.filter(fecha_de_firma_del_contrato__year=ano)
+            except (ValueError, TypeError):
+                pass
+        
+        # Aplicar filtro de municipio si se especifica
+        if municipio_filtro:
+            queryset = queryset.filter(municipio_entidad__icontains=municipio_filtro)
+        
+        # Aplicar filtro de búsqueda si se especifica
+        if busqueda_filtro:
+            queryset = queryset.filter(
+                Q(numero_de_proceso__icontains=busqueda_filtro) |
+                Q(numero_del_contrato__icontains=busqueda_filtro) |
+                Q(nom_raz_social_contratista__icontains=busqueda_filtro) |
+                Q(objeto_a_contratar__icontains=busqueda_filtro) |
+                Q(municipio_entidad__icontains=busqueda_filtro)
+            )
+        
+        return queryset.order_by('-fecha_de_firma_del_contrato')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Obtener filtros aplicados para mostrarlos en el template
+        context['ano_filtro'] = self.request.GET.get('ano', '') or self.request.POST.get('ano', '')
+        context['municipio_filtro'] = self.request.GET.get('municipio', '') or self.request.POST.get('municipio', '')
+        context['busqueda_filtro'] = self.request.GET.get('busqueda', '') or self.request.POST.get('busqueda', '')
+        
+        # Obtener años disponibles para el filtro
+        anos_disponibles = ContratoInteradministrativo.objects.filter(
+            documento_proveedor='901831522',
+            fecha_de_firma_del_contrato__isnull=False
+        ).dates('fecha_de_firma_del_contrato', 'year', order='DESC')
+        context['anos_disponibles'] = [fecha.year for fecha in anos_disponibles]
+        
+        # Obtener municipios disponibles para el filtro
+        municipios_disponibles = ContratoInteradministrativo.objects.filter(
+            documento_proveedor='901831522',
+            municipio_entidad__isnull=False
+        ).exclude(municipio_entidad='').values_list('municipio_entidad', flat=True).distinct().order_by('municipio_entidad')
+        context['municipios_disponibles'] = list(municipios_disponibles)
+        
+        # Total de contratos
+        context['total_contratos'] = self.get_queryset().count()
+        
+        return context

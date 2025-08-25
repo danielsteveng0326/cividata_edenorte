@@ -257,8 +257,14 @@
               <li class="nav-item">
                 <a href="{% url 'contratos_list' %}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Reportes</p>
+                  <p>Reportes Contratos</p>
                 </a>
+              </li>
+              <li class="nav-item">
+                  <a href="{% url 'contratos_interadmin_list' %}" class="nav-link">
+                      <i class="fas fa-file-contract mr-2"></i>
+                      <span>Reportes Interadministrativos</span>
+                  </a>
               </li>
               <li class="nav-item">
                 <a href="{% url 'docs_contractual:index' %}" class="nav-link">

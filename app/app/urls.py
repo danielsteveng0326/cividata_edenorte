@@ -2,6 +2,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
+from dashboard.views import ContratoInteradministrativoListView
 
 # Vistas de error personalizadas
 def custom_404(request, exception):
@@ -29,6 +30,7 @@ urlpatterns = [
     path('login/', include('login.urls')),
     path('contratacion/', include('dashboard.urls')),
     path('chat/', include('chatbot.urls')),
+    path('contratos-interadministrativos/', ContratoInteradministrativoListView.as_view(), name='contratos_interadmin_list'),
     path('docs-contractual/', include('docs_contractual.urls')),  # ← NUEVA RUTA
     path('proveedor/', include('proveedor.urls')),]
 
