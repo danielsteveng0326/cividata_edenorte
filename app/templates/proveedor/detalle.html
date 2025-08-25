@@ -230,52 +230,6 @@
         <!-- Sidebar con información adicional -->
         <div class="col-md-4">
           <!-- Info Box -->
-          <div class="card card-info">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-info-circle"></i>
-                Información Adicional
-              </h3>
-            </div>
-            <div class="card-body">
-              <dl class="row">
-                <dt class="col-sm-6">Tipo Empresa:</dt>
-                <dd class="col-sm-6">
-                  {% if proveedor.tipo_empresa == 'PERSONA NATURAL COLOMBIANA' %}
-                    <span class="badge badge-success">{{ proveedor.tipo_empresa }}</span>
-                  {% else %}
-                    <span class="badge badge-primary">{{ proveedor.tipo_empresa }}</span>
-                  {% endif %}
-                </dd>
-                
-                <dt class="col-sm-6">Estado:</dt>
-                <dd class="col-sm-6">
-                  {% if proveedor.get_estado_display == 'Activo' %}
-                    <span class="badge badge-success">{{ proveedor.get_estado_display }}</span>
-                  {% else %}
-                    <span class="badge badge-danger">{{ proveedor.get_estado_display }}</span>
-                  {% endif %}
-                </dd>
-                
-                <dt class="col-sm-6">Es PyME:</dt>
-                <dd class="col-sm-6">
-                  {% if proveedor.es_pyme_display %}
-                    <span class="badge badge-info">Sí</span>
-                  {% else %}
-                    <span class="badge badge-secondary">No</span>
-                  {% endif %}
-                </dd>
-                
-                <dt class="col-sm-6">Registrado:</dt>
-                <dd class="col-sm-6">{{ proveedor.fecha_registro|date:"d/m/Y" }}</dd>
-                
-                {% if proveedor.fecha_actualizacion %}
-                <dt class="col-sm-6">Actualizado:</dt>
-                <dd class="col-sm-6">{{ proveedor.fecha_actualizacion|date:"d/m/Y H:i" }}</dd>
-                {% endif %}
-              </dl>
-            </div>
-          </div>
           
           <!-- Acciones -->
           <div class="card card-warning">
