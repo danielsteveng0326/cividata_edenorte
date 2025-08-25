@@ -30,7 +30,7 @@ urlpatterns = [
     path('contratacion/', include('dashboard.urls')),
     path('chat/', include('chatbot.urls')),
     path('docs-contractual/', include('docs_contractual.urls')),  # ← NUEVA RUTA
-]
+    path('proveedor/', include('proveedor.urls')),]
 
 # Manejo de errores
 handler404 = custom_404

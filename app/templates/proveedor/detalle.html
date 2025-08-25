@@ -1,0 +1,400 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{ proveedor.nombre }} - Detalle Proveedor</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'lib/adminlt320/dist/css/adminlte.min.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="{% static 'lib/adminlt320/plugins/fontawesome-free/css/all.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Detalle del Proveedor</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Proveedores</a></li>
+            <li class="breadcrumb-item active">{{ proveedor.nombre|truncatechars:30 }}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      
+      <!-- Mostrar mensajes (siguiendo tu patrón) -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+      
+      <div class="row">
+        <!-- Información principal -->
+        <div class="col-md-8">
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-user-edit"></i>
+                Información del Proveedor
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-sm btn-tool" id="toggleEdit">
+                  <i class="fas fa-edit"></i> Editar
+                </button>
+              </div>
+            </div>
+            
+            <form id="proveedorForm" method="post">
+              {% csrf_token %}
+              <div class="card-body">
+                
+                <!-- Información básica -->
+                <div class="row">
+                  <div class="col-md-8">
+                    <div class="form-group">
+                      <label for="nombre">Nombre/Razón Social *</label>
+                      <input type="text" 
+                             class="form-control form-readonly" 
+                             id="nombre" 
+                             name="nombre" 
+                             value="{{ proveedor.nombre }}"
+                             readonly
+                             required>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label for="nit">NIT</label>
+                      <input type="text" 
+                             class="form-control" 
+                             id="nit" 
+                             value="{{ proveedor.nit }}"
+                             readonly
+                             disabled>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Información de contacto -->
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="telefono">Teléfono</label>
+                      <input type="tel" 
+                             class="form-control form-readonly" 
+                             id="telefono" 
+                             name="telefono" 
+                             value="{{ proveedor.telefono }}"
+                             readonly>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="correo">Correo Electrónico</label>
+                      <input type="email" 
+                             class="form-control form-readonly" 
+                             id="correo" 
+                             name="correo" 
+                             value="{{ proveedor.correo }}"
+                             readonly>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="direccion">Dirección</label>
+                  <input type="text" 
+                         class="form-control form-readonly" 
+                         id="direccion" 
+                         name="direccion" 
+                         value="{{ proveedor.direccion }}"
+                         readonly>
+                </div>
+                
+                <!-- Ubicación -->
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="departamento">Departamento</label>
+                      <input type="text" 
+                             class="form-control form-readonly" 
+                             id="departamento" 
+                             name="departamento" 
+                             value="{{ proveedor.departamento }}"
+                             readonly>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="municipio">Municipio</label>
+                      <input type="text" 
+                             class="form-control form-readonly" 
+                             id="municipio" 
+                             name="municipio" 
+                             value="{{ proveedor.municipio }}"
+                             readonly>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Representante legal (si aplica) -->
+                {% if necesita_rep_legal %}
+                <hr>
+                <h5><i class="fas fa-user-tie"></i> Representante Legal</h5>
+                
+                <div class="row">
+                  <div class="col-md-8">
+                    <div class="form-group">
+                      <label for="nombre_representante_legal">Nombre Representante Legal</label>
+                      <input type="text" 
+                             class="form-control form-readonly" 
+                             id="nombre_representante_legal" 
+                             name="nombre_representante_legal" 
+                             value="{{ proveedor.nombre_representante_legal }}"
+                             readonly>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label for="n_mero_doc_representante_legal">Número de Documento</label>
+                      <input type="text" 
+                             class="form-control form-readonly" 
+                             id="n_mero_doc_representante_legal" 
+                             name="n_mero_doc_representante_legal" 
+                             value="{{ proveedor.n_mero_doc_representante_legal }}"
+                             readonly>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="telefono_representante_legal">Teléfono Rep. Legal</label>
+                      <input type="tel" 
+                             class="form-control form-readonly" 
+                             id="telefono_representante_legal" 
+                             name="telefono_representante_legal" 
+                             value="{{ proveedor.telefono_representante_legal }}"
+                             readonly>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="correo_representante_legal">Correo Rep. Legal</label>
+                      <input type="email" 
+                             class="form-control form-readonly" 
+                             id="correo_representante_legal" 
+                             name="correo_representante_legal" 
+                             value="{{ proveedor.correo_representante_legal }}"
+                             readonly>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+                
+              </div>
+              
+              <div class="card-footer" id="editFooter" style="display: none;">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save"></i>
+                  Guardar Cambios
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancelEdit">
+                  <i class="fas fa-times"></i>
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Sidebar con información adicional -->
+        <div class="col-md-4">
+          <!-- Info Box -->
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-info-circle"></i>
+                Información Adicional
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-6">Tipo Empresa:</dt>
+                <dd class="col-sm-6">
+                  {% if proveedor.tipo_empresa == 'PERSONA NATURAL COLOMBIANA' %}
+                    <span class="badge badge-success">{{ proveedor.tipo_empresa }}</span>
+                  {% else %}
+                    <span class="badge badge-primary">{{ proveedor.tipo_empresa }}</span>
+                  {% endif %}
+                </dd>
+                
+                <dt class="col-sm-6">Estado:</dt>
+                <dd class="col-sm-6">
+                  {% if proveedor.get_estado_display == 'Activo' %}
+                    <span class="badge badge-success">{{ proveedor.get_estado_display }}</span>
+                  {% else %}
+                    <span class="badge badge-danger">{{ proveedor.get_estado_display }}</span>
+                  {% endif %}
+                </dd>
+                
+                <dt class="col-sm-6">Es PyME:</dt>
+                <dd class="col-sm-6">
+                  {% if proveedor.es_pyme_display %}
+                    <span class="badge badge-info">Sí</span>
+                  {% else %}
+                    <span class="badge badge-secondary">No</span>
+                  {% endif %}
+                </dd>
+                
+                <dt class="col-sm-6">Registrado:</dt>
+                <dd class="col-sm-6">{{ proveedor.fecha_registro|date:"d/m/Y" }}</dd>
+                
+                {% if proveedor.fecha_actualizacion %}
+                <dt class="col-sm-6">Actualizado:</dt>
+                <dd class="col-sm-6">{{ proveedor.fecha_actualizacion|date:"d/m/Y H:i" }}</dd>
+                {% endif %}
+              </dl>
+            </div>
+          </div>
+          
+          <!-- Acciones -->
+          <div class="card card-warning">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-cogs"></i>
+                Acciones
+              </h3>
+            </div>
+            <div class="card-body">
+              <a href="{% url 'proveedor:index' %}" class="btn btn-secondary btn-block mb-2">
+                <i class="fas fa-arrow-left"></i>
+                Volver a Consulta
+              </a>
+              <a href="{% url 'proveedor:listar' %}" class="btn btn-info btn-block mb-2">
+                <i class="fas fa-list"></i>
+                Ver Todos los Proveedores
+              </a>
+              {% if proveedor.sitio_web %}
+              <a href="{{ proveedor.sitio_web }}" target="_blank" class="btn btn-outline-primary btn-block">
+                <i class="fas fa-external-link-alt"></i>
+                Sitio Web
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Scripts -->
+<script src="{% static 'lib/adminlt320/plugins/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'lib/bootstrap533dist/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'lib/adminlt320/dist/js/adminlte.min.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    let editMode = false;
+    
+    // Configurar toastr
+    toastr.options = {
+        "closeButton": true,
+        "timeOut": "5000"
+    };
+    
+    // Alternar modo edición
+    $('#toggleEdit').on('click', function() {
+        if (!editMode) {
+            enableEditMode();
+        }
+    });
+    
+    $('#cancelEdit').on('click', function() {
+        disableEditMode();
+        location.reload(); // Recargar para restaurar valores originales
+    });
+    
+    function enableEditMode() {
+        editMode = true;
+        $('.form-readonly').prop('readonly', false).removeClass('form-readonly').addClass('form-editable');
+        $('#toggleEdit').html('<i class="fas fa-eye"></i> Solo Lectura');
+        $('#editFooter').show();
+        
+        // Destacar campos editables
+        $('.form-editable').css('border-color', '#007bff');
+        
+        toastr.info('Modo edición activado. Modifica los campos y guarda los cambios.');
+    }
+    
+    function disableEditMode() {
+        editMode = false;
+        $('.form-editable').prop('readonly', true).removeClass('form-editable').addClass('form-readonly');
+        $('#toggleEdit').html('<i class="fas fa-edit"></i> Editar');
+        $('#editFooter').hide();
+        
+        // Restaurar estilo
+        $('.form-readonly').css('border-color', '');
+    }
+    
+    // Validar formulario antes del envío
+    $('#proveedorForm').on('submit', function(e) {
+        const nombre = $('#nombre').val().trim();
+        
+        if (!nombre) {
+            e.preventDefault();
+            toastr.error('El nombre es requerido');
+            $('#nombre').focus();
+            return false;
+        }
+        
+        // Mostrar loading
+        $('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+    });
+});
+</script>
+
+<style>
+.form-readonly {
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+}
+
+.form-editable {
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+.form-editable:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+dl.row dt {
+    font-weight: 600;
+    color: #6c757d;
+}
+</style>
+
+</body>
+</html>

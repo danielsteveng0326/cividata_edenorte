@@ -43,3 +43,5 @@ class LoginRequiredMiddleware:
                 print(f'✅ Usuario {username} creado desde middleware!')
         except Exception as e:
             print(f'⚠️ Error en middleware: {e}')
+
+    

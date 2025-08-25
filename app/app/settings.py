@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'login',
     'chatbot',
     'docs_contractual',
-]
+    'proveedor',]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

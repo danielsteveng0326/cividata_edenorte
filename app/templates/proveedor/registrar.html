@@ -1,0 +1,427 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Registrar Proveedor</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'lib/adminlt320/dist/css/adminlte.min.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet" href="{% static 'lib/adminlt320/plugins/fontawesome-free/css/all.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Registrar Nuevo Proveedor</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Proveedores</a></li>
+            <li class="breadcrumb-item active">Registrar</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      
+      <!-- Mostrar mensajes (siguiendo tu patrón) -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+      
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card card-success">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-user-plus"></i>
+                Datos del Proveedor
+              </h3>
+            </div>
+            
+            <form id="registroForm" method="post">
+              {% csrf_token %}
+              <div class="card-body">
+                
+                <!-- Información básica requerida -->
+                <h5 class="text-primary">
+                  <i class="fas fa-info-circle"></i>
+                  Información Básica (Requerida)
+                </h5>
+                
+                <div class="row">
+                  <div class="col-md-8">
+                    <div class="form-group">
+                      <label for="nombre">Nombre/Razón Social *</label>
+                      <input type="text" 
+                             class="form-control" 
+                             id="nombre" 
+                             name="nombre" 
+                             value="{{ form_data.nombre|default:'' }}"
+                             placeholder="Nombre completo o razón social de la empresa"
+                             required>
+                      <div class="invalid-feedback">
+                        El nombre es requerido
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label for="nit">NIT *</label>
+                      <input type="text" 
+                             class="form-control" 
+                             id="nit" 
+                             name="nit" 
+                             value="{{ form_data.nit|default:request.GET.nit }}"
+                             placeholder="123456789"
+                             pattern="[0-9]+"
+                             title="Solo números"
+                             required>
+                      <div class="invalid-feedback">
+                        El NIT es requerido y debe contener solo números
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="telefono">Teléfono</label>
+                      <input type="tel" 
+                             class="form-control" 
+                             id="telefono" 
+                             name="telefono" 
+                             value="{{ form_data.telefono|default:'' }}"
+                             placeholder="300 123 4567">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="correo">Correo Electrónico</label>
+                      <input type="email" 
+                             class="form-control" 
+                             id="correo" 
+                             name="correo" 
+                             value="{{ form_data.correo|default:'' }}"
+                             placeholder="correo@ejemplo.com">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="direccion">Dirección</label>
+                  <input type="text" 
+                         class="form-control" 
+                         id="direccion" 
+                         name="direccion" 
+                         value="{{ form_data.direccion|default:'' }}"
+                         placeholder="Dirección completa">
+                </div>
+                
+                <div class="form-group">
+                  <label for="tipo_empresa">Tipo de Empresa *</label>
+                  <select class="form-control" id="tipo_empresa" name="tipo_empresa" required>
+                    <option value="PERSONA NATURAL COLOMBIANA" {% if form_data.tipo_empresa == 'PERSONA NATURAL COLOMBIANA' or not form_data.tipo_empresa %}selected{% endif %}>
+                      Persona Natural Colombiana
+                    </option>
+                    <option value="PERSONA JURÍDICA" {% if form_data.tipo_empresa == 'PERSONA JURÍDICA' %}selected{% endif %}>
+                      Persona Jurídica
+                    </option>
+                    <option value="EMPRESA UNIPERSONAL" {% if form_data.tipo_empresa == 'EMPRESA UNIPERSONAL' %}selected{% endif %}>
+                      Empresa Unipersonal
+                    </option>
+                    <option value="SOCIEDAD ANÓNIMA" {% if form_data.tipo_empresa == 'SOCIEDAD ANÓNIMA' %}selected{% endif %}>
+                      Sociedad Anónima
+                    </option>
+                    <option value="SOCIEDAD LIMITADA" {% if form_data.tipo_empresa == 'SOCIEDAD LIMITADA' %}selected{% endif %}>
+                      Sociedad Limitada
+                    </option>
+                    <option value="COOPERATIVA" {% if form_data.tipo_empresa == 'COOPERATIVA' %}selected{% endif %}>
+                      Cooperativa
+                    </option>
+                    <option value="OTRA" {% if form_data.tipo_empresa == 'OTRA' %}selected{% endif %}>
+                      Otra
+                    </option>
+                  </select>
+                </div>
+                
+                <!-- Información del representante legal (se muestra/oculta según tipo_empresa) -->
+                <div id="representanteLegalSection" style="display: none;">
+                  <hr>
+                  <h5 class="text-warning">
+                    <i class="fas fa-user-tie"></i>
+                    Representante Legal (Requerido para empresas)
+                  </h5>
+                  
+                  <div class="row">
+                    <div class="col-md-8">
+                      <div class="form-group">
+                        <label for="nombre_representante_legal">Nombre Representante Legal *</label>
+                        <input type="text" 
+                               class="form-control representante-field" 
+                               id="nombre_representante_legal" 
+                               name="nombre_representante_legal" 
+                               value="{{ form_data.nombre_representante_legal|default:'' }}"
+                               placeholder="Nombre completo del representante legal">
+                        <div class="invalid-feedback">
+                          El nombre del representante legal es requerido para empresas
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label for="n_mero_doc_representante_legal">Número de Documento *</label>
+                        <input type="text" 
+                               class="form-control representante-field" 
+                               id="n_mero_doc_representante_legal" 
+                               name="n_mero_doc_representante_legal" 
+                               value="{{ form_data.n_mero_doc_representante_legal|default:'' }}"
+                               placeholder="12345678"
+                               pattern="[0-9]+">
+                        <div class="invalid-feedback">
+                          El número de documento es requerido para empresas
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="telefono_representante_legal">Teléfono Rep. Legal</label>
+                        <input type="tel" 
+                               class="form-control" 
+                               id="telefono_representante_legal" 
+                               name="telefono_representante_legal" 
+                               value="{{ form_data.telefono_representante_legal|default:'' }}"
+                               placeholder="300 123 4567">
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="correo_representante_legal">Correo Rep. Legal</label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="correo_representante_legal" 
+                               name="correo_representante_legal" 
+                               value="{{ form_data.correo_representante_legal|default:'' }}"
+                               placeholder="representante@empresa.com">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+              
+              <div class="card-footer">
+                <button type="submit" class="btn btn-success btn-lg mr-2">
+                  <i class="fas fa-save"></i>
+                  Registrar Proveedor
+                </button>
+                <a href="{% url 'proveedor:index' %}" class="btn btn-secondary">
+                  <i class="fas fa-arrow-left"></i>
+                  Cancelar
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Sidebar con ayuda (siguiendo tu patrón) -->
+        <div class="col-md-4">
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-question-circle"></i>
+                Ayuda
+              </h3>
+            </div>
+            <div class="card-body">
+              <h6>Campos Requeridos</h6>
+              <ul>
+                <li><strong>Nombre:</strong> Razón social completa</li>
+                <li><strong>NIT:</strong> Sin dígito de verificación</li>
+              </ul>
+              
+              <h6 class="mt-3">Representante Legal</h6>
+              <p class="text-sm">
+                Se requiere información del representante legal solo para empresas 
+                (todos los tipos excepto Persona Natural Colombiana).
+              </p>
+              
+              <div class="alert alert-warning">
+                <h6><i class="fas fa-exclamation-triangle"></i> Importante</h6>
+                <p class="mb-0">
+                  Verifica que el NIT no exista ya en el sistema. 
+                  Un NIT duplicado causará error al registrar.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card card-secondary">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-lightbulb"></i>
+                Información
+              </h3>
+            </div>
+            <div class="card-body">
+              <p>
+                Este formulario permite registrar manualmente proveedores que no se encuentran 
+                en la API oficial SECOP.
+              </p>
+              <p>
+                Una vez registrado, el proveedor estará disponible para su uso en contratos 
+                y otros procesos del sistema.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Scripts -->
+<script src="{% static 'lib/adminlt320/plugins/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'lib/bootstrap533dist/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'lib/adminlt320/dist/js/adminlte.min.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Configurar toastr
+    toastr.options = {
+        "closeButton": true,
+        "timeOut": "5000"
+    };
+    
+    // Manejar cambio de tipo de empresa
+    $('#tipo_empresa').on('change', function() {
+        const tipoEmpresa = $(this).val();
+        const representanteSection = $('#representanteLegalSection');
+        const representanteFields = $('.representante-field');
+        
+        if (tipoEmpresa === 'PERSONA NATURAL COLOMBIANA') {
+            representanteSection.slideUp();
+            representanteFields.prop('required', false);
+            toastr.info('Para personas naturales no se requiere información de representante legal');
+        } else {
+            representanteSection.slideDown();
+            representanteFields.prop('required', true);
+            toastr.info('Para empresas es obligatorio registrar la información del representante legal');
+        }
+    });
+    
+    // Inicializar estado al cargar
+    $('#tipo_empresa').trigger('change');
+    
+    // Validar formulario
+    $('#registroForm').on('submit', function(e) {
+        let valid = true;
+        const tipoEmpresa = $('#tipo_empresa').val();
+        
+        // Validar campos básicos
+        const nombre = $('#nombre').val().trim();
+        const nit = $('#nit').val().trim();
+        
+        if (!nombre) {
+            $('#nombre').addClass('is-invalid');
+            valid = false;
+        } else {
+            $('#nombre').removeClass('is-invalid');
+        }
+        
+        if (!nit) {
+            $('#nit').addClass('is-invalid');
+            valid = false;
+        } else if (!/^\d+$/.test(nit)) {
+            $('#nit').addClass('is-invalid');
+            toastr.error('El NIT debe contener solo números');
+            valid = false;
+        } else {
+            $('#nit').removeClass('is-invalid');
+        }
+        
+        // Validar representante legal si es empresa
+        if (tipoEmpresa !== 'PERSONA NATURAL COLOMBIANA') {
+            const nombreRep = $('#nombre_representante_legal').val().trim();
+            const docRep = $('#n_mero_doc_representante_legal').val().trim();
+            
+            if (!nombreRep) {
+                $('#nombre_representante_legal').addClass('is-invalid');
+                valid = false;
+            } else {
+                $('#nombre_representante_legal').removeClass('is-invalid');
+            }
+            
+            if (!docRep) {
+                $('#n_mero_doc_representante_legal').addClass('is-invalid');
+                valid = false;
+            } else {
+                $('#n_mero_doc_representante_legal').removeClass('is-invalid');
+            }
+        }
+        
+        if (!valid) {
+            e.preventDefault();
+            toastr.error('Por favor corrige los errores en el formulario');
+            return false;
+        }
+        
+        // Mostrar loading
+        $('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Registrando...');
+    });
+    
+    // Limpiar validación al escribir
+    $('input').on('input', function() {
+        $(this).removeClass('is-invalid');
+    });
+    
+    // Solo números en NIT y documento representante
+    $('#nit, #n_mero_doc_representante_legal').on('input', function() {
+        this.value = this.value.replace(/\D/g, '');
+    });
+});
+</script>
+
+<style>
+.representante-field.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.card-header h5 {
+    margin-bottom: 0;
+}
+
+.alert h6 {
+    margin-bottom: 10px;
+}
+</style>
+
+</body>
+</html>
