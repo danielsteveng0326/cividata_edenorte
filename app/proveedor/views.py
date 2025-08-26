@@ -87,26 +87,26 @@ def consultar_nit(request):
             })
             
         except Proveedor.DoesNotExist:
-            print("📡 Proveedor no encontrado localmente, consultando API...")
+            print("📡 Proveedor no encontrado localmente, consultando APP...")
             
-            # Consultar en la API externa
+            # Consultar en la APP externa
             api_response = api_consulta_proveedor(nit)
             
             if api_response.get('success', False):
-                print(f"✅ Proveedor encontrado en API: {api_response.get('data', {}).get('nombre', 'N/A')}")
+                print(f"✅ Proveedor encontrado en APP: {api_response.get('data', {}).get('nombre', 'N/A')}")
                 
                 return JsonResponse({
                     'success': True,
                     'existe_local': False,
                     'api_data': api_response['data'],
-                    'message': 'Proveedor encontrado en API externa'
+                    'message': 'Proveedor encontrado en externa'
                 })
             else:
-                print(f"⚠️ Proveedor no encontrado en API: {api_response.get('error', 'Error desconocido')}")
+                print(f"⚠️ Proveedor no encontrado en BD: {api_response.get('error', 'Error desconocido')}")
                 
                 return JsonResponse({
                     'success': False,
-                    'error': f'Proveedor con NIT {nit} no encontrado en API externa'
+                    'error': f'Proveedor con NIT {nit} no encontrado en BD externa'
                 })
     
     except Exception as e:
@@ -298,24 +298,24 @@ def listar_proveedores(request):
 @login_required
 def api_proveedores(request):
     """
-    Vista para sincronización masiva desde API - SOLO ACCESIBLE POR URL
+    Vista para sincronización masiva desde APP - SOLO ACCESIBLE POR URL
     Esta función está diseñada para ejecutarse automáticamente, no desde interfaz
     """
     print("🚀 Iniciando sincronización masiva de proveedores...")
     
     try:
-        # Obtener datos de la API
+        # Obtener datos de la APP
         from .utils import api_consulta_proveedor_completa
         response = api_consulta_proveedor_completa()
         
         if response['status'] == 'success':
-            print("✅ API de proveedores respondió exitosamente")
+            print("✅ APP de proveedores respondió exitosamente")
             
             # Convertir JSON string a lista de diccionarios
             proveedores_data = json.loads(response['data'])
-            print(f"📊 Total proveedores recibidos de la API: {len(proveedores_data)}")
+            print(f"📊 Total proveedores recibidos de la APP: {len(proveedores_data)}")
             
-            # Procesar los datos de la API - SOLO ACTUALIZAR NULL Y AGREGAR NUEVOS
+            # Procesar los datos de la APP - SOLO ACTUALIZAR NULL Y AGREGAR NUEVOS
             from .db import process_proveedor_api_data
             nuevos, actualizados, errores = process_proveedor_api_data(proveedores_data)
             
@@ -336,21 +336,21 @@ def api_proveedores(request):
             })
             
         elif response['status'] == 'no_data':
-            print("⚠️ No se encontraron datos en la API de proveedores")
+            print("⚠️ No se encontraron datos en la APP de proveedores")
             return render(request, 'proveedor/api.html', {
-                "error": "No se encontraron proveedores nuevos en la API",
+                "error": "No se encontraron proveedores nuevos en la APP",
                 "success": False
             })
             
         else:
-            print(f"❌ Error en API de proveedores: {response.get('message')}")
+            print(f"❌ Error en APP de proveedores: {response.get('message')}")
             return render(request, 'proveedor/api.html', {
                 "error": response['message'],
                 "success": False
             })
             
     except Exception as e:
-        print(f"❌ Error crítico en vista API proveedores: {str(e)}")
+        print(f"❌ Error crítico en vista APP proveedores: {str(e)}")
         import traceback
         traceback.print_exc()
         
