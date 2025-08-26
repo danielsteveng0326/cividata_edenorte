@@ -17,11 +17,11 @@ from datetime import datetime
 
 @login_required
 def index(request):
-    """Vista principal del módulo de proveedores - siguiendo el patrón de dashboard/views.py"""
+    """Vista principal del módulo de proveedores"""
     print("🚀 Accediendo al módulo de proveedores...")
     
     try:
-        # Obtener estadísticas básicas (como en dashboard)
+        # Obtener estadísticas básicas
         stats = get_proveedores_stats()
         print(f"📊 Estadísticas de proveedores: {stats}")
         
@@ -46,7 +46,7 @@ def index(request):
 @login_required
 @require_POST
 def consultar_nit(request):
-    """Vista AJAX para consultar proveedor por NIT - siguiendo el patrón de tus APP"""
+    """Vista AJAX para consultar proveedor por NIT"""
     print("🔍 Iniciando consulta por NIT...")
     
     try:
@@ -68,76 +68,49 @@ def consultar_nit(request):
                 'error': 'Formato de NIT inválido. Solo números, mínimo 7 dígitos.'
             })
         
-        # Verificar si ya existe en nuestra base de datos (como haces en dashboard)
-        proveedor_existente = Proveedor.objects.filter(nit=nit).first()
-        
-        if proveedor_existente:
-            print(f"✅ Proveedor encontrado en BD local: {nit}")
+        # Verificar si el proveedor ya existe localmente
+        try:
+            proveedor_local = Proveedor.objects.get(nit=nit)
+            print(f"✅ Proveedor encontrado localmente: {proveedor_local.nombre}")
+            
             return JsonResponse({
                 'success': True,
                 'existe_local': True,
-                'proveedor': proveedor_existente.get_info_basica(),
-                'proveedor_id': proveedor_existente.id,
-                'message': ''
+                'proveedor': {
+                    'nit': proveedor_local.nit,
+                    'nombre': proveedor_local.nombre,
+                    'telefono': proveedor_local.telefono,
+                    'correo': proveedor_local.correo,
+                },
+                'detalle_url': f'/proveedor/detalle/{proveedor_local.id}/',
+                'message': 'Proveedor encontrado en el sistema local'
             })
-        
-        # Consultar a través de la API (siguiendo tu patrón exacto)
-        print("📡 Consultando APP de proveedores...")
-        resultado_api = api_consulta_proveedor(nit)
-        
-        if resultado_api['status'] == 'success':
-            print("✅ APP respondió exitosamente")
             
-            # Convertir JSON string a lista de diccionarios (tu patrón)
-            proveedores_data = json.loads(resultado_api['data'])
-            print(f"📊 Registros obtenidos de la APP: {len(proveedores_data)}")
+        except Proveedor.DoesNotExist:
+            print("📡 Proveedor no encontrado localmente, consultando API...")
             
-            if proveedores_data and len(proveedores_data) > 0:
-                # Tomar el primer registro (más reciente por el ORDER BY)
-                proveedor_data = proveedores_data[0]
+            # Consultar en la API externa
+            api_response = api_consulta_proveedor(nit)
+            
+            if api_response.get('success', False):
+                print(f"✅ Proveedor encontrado en API: {api_response.get('data', {}).get('nombre', 'N/A')}")
                 
-                # Procesar y guardar el proveedor en BD
-                proveedor = process_single_proveedor_data(proveedor_data)
-                
-                if proveedor:
-                    print(f"✅ Proveedor procesado y guardado: {nit}")
-                    return JsonResponse({
-                        'success': True,
-                        'existe_local': False,
-                        'proveedor': proveedor.get_info_basica(),
-                        'proveedor_id': proveedor.id,
-                        'message': 'Proveedor consultado y guardado'
-                    })
-                else:
-                    print(f"❌ Error procesando proveedor: {nit}")
-                    return JsonResponse({
-                        'success': False,
-                        'error': 'Error al procesar datos del proveedor'
-                    })
+                return JsonResponse({
+                    'success': True,
+                    'existe_local': False,
+                    'api_data': api_response['data'],
+                    'message': 'Proveedor encontrado en API externa'
+                })
             else:
-                print(f"❌ Proveedor no encontrado: {nit}")
+                print(f"⚠️ Proveedor no encontrado en API: {api_response.get('error', 'Error desconocido')}")
+                
                 return JsonResponse({
                     'success': False,
-                    'not_found': True,
-                    'message': 'Proveedor no encontrado'
+                    'error': f'Proveedor con NIT {nit} no encontrado en API externa'
                 })
-                
-        elif resultado_api['status'] == 'no_data':
-            print(f"❌ No se encontraron datos para NIT: {nit}")
-            return JsonResponse({
-                'success': False,
-                'not_found': True,
-                'message': 'Proveedor no encontrado'
-            })
-        else:
-            print(f"❌ Error en APP: {resultado_api.get('message')}")
-            return JsonResponse({
-                'success': False,
-                'error': resultado_api['message']
-            })
-            
+    
     except Exception as e:
-        print(f"❌ Error crítico en consulta por NIT: {str(e)}")
+        print(f"❌ ERROR en consulta de NIT: {str(e)}")
         import traceback
         traceback.print_exc()
         
@@ -148,34 +121,34 @@ def consultar_nit(request):
 
 @login_required
 def detalle_proveedor(request, proveedor_id):
-    """Vista para mostrar y editar detalles del proveedor - siguiendo tu patrón"""
-    print(f"🔍 Accediendo a detalle de proveedor ID: {proveedor_id}")
+    """Vista para mostrar y editar detalles de un proveedor"""
+    print(f"👀 Accediendo a detalle del proveedor ID: {proveedor_id}")
     
     proveedor = get_object_or_404(Proveedor, id=proveedor_id)
-    print(f"📋 Proveedor cargado: {proveedor.nombre} - {proveedor.nit}")
     
     if request.method == 'POST':
-        print("📝 Procesando actualización de proveedor...")
+        print("📝 Actualizando información del proveedor...")
         
         try:
-            # Actualizar información del proveedor (siguiendo tu patrón de validación)
+            # Actualizar información básica
             proveedor.nombre = request.POST.get('nombre', '').strip()
             proveedor.telefono = request.POST.get('telefono', '').strip()
             proveedor.correo = request.POST.get('correo', '').strip()
             proveedor.direccion = request.POST.get('direccion', '').strip()
-            proveedor.departamento = request.POST.get('departamento', '').strip()
-            proveedor.municipio = request.POST.get('municipio', '').strip()
             
-            # Validaciones básicas (como haces en otras vistas)
+            # Validar campos requeridos
             if not proveedor.nombre:
-                print("⚠️ Error: Nombre vacío")
-                messages.error(request, 'El nombre es requerido')
-                return render(request, 'proveedor/detalle.html', {'proveedor': proveedor})
+                raise ValidationError('El nombre es requerido')
+            
+            # Actualizar tipo de empresa si se proporciona
+            tipo_empresa = request.POST.get('tipo_empresa', '').strip()
+            if tipo_empresa:
+                proveedor.tipo_empresa = tipo_empresa
             
             # Actualizar información de representante legal si aplica
             if proveedor.necesita_representante_legal():
                 proveedor.nombre_representante_legal = request.POST.get('nombre_representante_legal', '').strip()
-                proveedor.n_mero_doc_representante_legal = request.POST.get('n_mero_doc_representante_legal', '').strip()
+                proveedor.numero_doc_representante_legal = request.POST.get('numero_doc_representante_legal', '').strip()
                 proveedor.telefono_representante_legal = request.POST.get('telefono_representante_legal', '').strip()
                 proveedor.correo_representante_legal = request.POST.get('correo_representante_legal', '').strip()
             
@@ -203,7 +176,7 @@ def detalle_proveedor(request, proveedor_id):
 
 @login_required
 def registrar_proveedor(request):
-    """Vista para registrar un nuevo proveedor manualmente - siguiendo tu patrón"""
+    """Vista para registrar un nuevo proveedor manualmente"""
     print("➕ Accediendo a registro manual de proveedor...")
     
     if request.method == 'POST':
@@ -220,7 +193,7 @@ def registrar_proveedor(request):
             
             print(f"📋 Datos recibidos - NIT: {nit}, Nombre: {nombre}")
             
-            # Validaciones básicas (como haces en dashboard)
+            # Validaciones básicas
             if not nit or not nombre:
                 print("⚠️ Error: Campos requeridos faltantes")
                 messages.error(request, 'NIT y nombre son campos requeridos')
@@ -232,19 +205,19 @@ def registrar_proveedor(request):
                 messages.error(request, 'Formato de NIT inválido')
                 return render(request, 'proveedor/registrar.html', {'form_data': request.POST})
             
-            # Verificar que no exista (como validas unicidad en contratos)
+            # Verificar que no exista
             if Proveedor.objects.filter(nit=nit).exists():
                 print(f"⚠️ Error: NIT duplicado {nit}")
                 messages.error(request, 'Ya existe un proveedor con este NIT')
                 return render(request, 'proveedor/registrar.html', {'form_data': request.POST})
             
-            # Crear proveedor (usando transacción como en dashboard/db.py)
+            # Crear proveedor usando transacción
             proveedor_data = {
                 'nit': nit,
                 'nombre': nombre,
-                'telefono': telefono,
-                'correo': correo,
-                'direccion': direccion,
+                'telefono': telefono or None,
+                'correo': correo or None,
+                'direccion': direccion or None,
                 'tipo_empresa': tipo_empresa,
                 'activo': 'true'
             }
@@ -252,10 +225,10 @@ def registrar_proveedor(request):
             # Agregar datos de representante legal si aplica
             if tipo_empresa != 'PERSONA NATURAL COLOMBIANA':
                 proveedor_data.update({
-                    'nombre_representante_legal': request.POST.get('nombre_representante_legal', '').strip(),
-                    'n_mero_doc_representante_legal': request.POST.get('n_mero_doc_representante_legal', '').strip(),
-                    'telefono_representante_legal': request.POST.get('telefono_representante_legal', '').strip(),
-                    'correo_representante_legal': request.POST.get('correo_representante_legal', '').strip(),
+                    'nombre_representante_legal': request.POST.get('nombre_representante_legal', '').strip() or None,
+                    'numero_doc_representante_legal': request.POST.get('numero_doc_representante_legal', '').strip() or None,
+                    'telefono_representante_legal': request.POST.get('telefono_representante_legal', '').strip() or None,
+                    'correo_representante_legal': request.POST.get('correo_representante_legal', '').strip() or None,
                 })
             
             with transaction.atomic():
@@ -280,14 +253,14 @@ def registrar_proveedor(request):
 
 @login_required  
 def listar_proveedores(request):
-    """Vista para listar todos los proveedores - siguiendo el patrón de ContratoListView"""
+    """Vista para listar todos los proveedores"""
     print("📋 Accediendo a lista de proveedores...")
     
     try:
-        # Query base (como en dashboard)
+        # Query base
         proveedores = Proveedor.objects.filter(activo='true').order_by('-fecha_registro')
         
-        # Búsqueda simple (siguiendo tu patrón de filtros)
+        # Búsqueda simple
         search = request.GET.get('search', '').strip()
         if search:
             print(f"🔍 Aplicando filtro de búsqueda: {search}")
@@ -302,19 +275,12 @@ def listar_proveedores(request):
             print(f"🔍 Aplicando filtro de tipo: {tipo_filtro}")
             proveedores = proveedores.filter(tipo_empresa=tipo_filtro)
         
-        # Filtro por estado
-        estado_filtro = request.GET.get('estado', '').strip()
-        if estado_filtro:
-            print(f"🔍 Aplicando filtro de estado: {estado_filtro}")
-            proveedores = proveedores.filter(esta_activa=estado_filtro)
-        
         print(f"📊 Total proveedores encontrados: {proveedores.count()}")
         
         context = {
             'proveedores': proveedores,
             'search': search,
             'tipo_filtro': tipo_filtro,
-            'estado_filtro': estado_filtro
         }
         
         return render(request, 'proveedor/listar.html', context)
@@ -331,22 +297,25 @@ def listar_proveedores(request):
 
 @login_required
 def api_proveedores(request):
-    """Vista para sincronización masiva desde - siguiendo el patrón de dashboard ()"""
+    """
+    Vista para sincronización masiva desde API - SOLO ACCESIBLE POR URL
+    Esta función está diseñada para ejecutarse automáticamente, no desde interfaz
+    """
     print("🚀 Iniciando sincronización masiva de proveedores...")
     
     try:
-        # Obtener datos de la API (siguiendo tu patrón exacto)
+        # Obtener datos de la API
         from .utils import api_consulta_proveedor_completa
         response = api_consulta_proveedor_completa()
         
         if response['status'] == 'success':
-            print("✅ APP de proveedores respondió exitosamente")
+            print("✅ API de proveedores respondió exitosamente")
             
-            # Convertir JSON string a lista de diccionarios (tu patrón)
+            # Convertir JSON string a lista de diccionarios
             proveedores_data = json.loads(response['data'])
-            print(f"📊 Total proveedores recibidos de la APP: {len(proveedores_data)}")
+            print(f"📊 Total proveedores recibidos de la API: {len(proveedores_data)}")
             
-            # Procesar los datos de la API
+            # Procesar los datos de la API - SOLO ACTUALIZAR NULL Y AGREGAR NUEVOS
             from .db import process_proveedor_api_data
             nuevos, actualizados, errores = process_proveedor_api_data(proveedores_data)
             
@@ -367,21 +336,21 @@ def api_proveedores(request):
             })
             
         elif response['status'] == 'no_data':
-            print("⚠️ No se encontraron datos en la APP de proveedores")
+            print("⚠️ No se encontraron datos en la API de proveedores")
             return render(request, 'proveedor/api.html', {
-                "error": "No se encontraron proveedores nuevos en la APP",
+                "error": "No se encontraron proveedores nuevos en la API",
                 "success": False
             })
             
         else:
-            print(f"❌ Error en APP de proveedores: {response.get('message')}")
+            print(f"❌ Error en API de proveedores: {response.get('message')}")
             return render(request, 'proveedor/api.html', {
                 "error": response['message'],
                 "success": False
             })
             
     except Exception as e:
-        print(f"❌ Error crítico en vista APP proveedores: {str(e)}")
+        print(f"❌ Error crítico en vista API proveedores: {str(e)}")
         import traceback
         traceback.print_exc()
         
@@ -396,7 +365,7 @@ class ProveedorListView(ListView):
     model = Proveedor
     template_name = 'proveedor/tabla_proveedores.html'
     context_object_name = 'proveedores'
-    paginate_by = 50  # Como en dashboard
+    paginate_by = 50
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
@@ -407,7 +376,6 @@ class ProveedorListView(ListView):
         # Parámetros de filtro desde GET y POST
         search_filtro = self.request.GET.get('search', '') or self.request.POST.get('search', '')
         tipo_filtro = self.request.GET.get('tipo', '') or self.request.POST.get('tipo', '')
-        estado_filtro = self.request.GET.get('estado', '') or self.request.POST.get('estado', '')
         
         # Query base
         queryset = Proveedor.objects.filter(activo='true')
@@ -421,8 +389,11 @@ class ProveedorListView(ListView):
         
         if tipo_filtro:
             queryset = queryset.filter(tipo_empresa=tipo_filtro)
-        
-        if estado_filtro:
-            queryset = queryset.filter(esta_activa=estado_filtro)
             
         return queryset.order_by('-fecha_registro')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['tipo_filtro'] = self.request.GET.get('tipo', '')
+        return context

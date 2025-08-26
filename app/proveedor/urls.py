@@ -6,7 +6,7 @@ from .views import ProveedorListView
 app_name = 'proveedor'
 
 urlpatterns = [
-    # Vista principal (siguiendo el patrón de dashboard)
+    # Vista principal
     path('', views.index, name="index"),
     
     # Consulta de proveedores por NIT (AJAX)
@@ -21,9 +21,10 @@ urlpatterns = [
     # Listado simple
     path('listar/', views.listar_proveedores, name='listar'),
     
-    # API para sincronización masiva (siguiendo el patrón de dashboard/api)
-    path('api/', views.api_proveedores, name="api"),
+    # API para sincronización masiva - SOLO ACCESIBLE POR URL, SIN BOTONES
+    # Esta URL está pensada para automatización, no para uso manual
+    path('api/sincronizar/', views.api_proveedores, name="api"),
     
-    # Vista de tabla con ListView (siguiendo el patrón de ContratoListView)
+    # Vista de tabla con ListView
     path('tabla/', ProveedorListView.as_view(), name='tabla_proveedores'),
 ]

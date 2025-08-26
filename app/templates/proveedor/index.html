@@ -1,20 +1,10 @@
+{% extends "navbar.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Gestión de Proveedores</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{% static 'lib/adminlt320/dist/css/adminlte.min.css' %}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-    <link rel="stylesheet" href="{% static 'lib/adminlt320/plugins/fontawesome-free/css/all.min.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.css">
-</head>
 
-<body class="hold-transition sidebar-mini layout-fixed">
-<div class="wrapper">
+{% block title %}Gestión de Proveedores{% endblock %}
 
-  <!-- Content Header (Page header) -->
+{% block content %}
+<!-- Content Header -->
   <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
@@ -23,7 +13,7 @@
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'index' %}">Inicio</a></li>
             <li class="breadcrumb-item active">Proveedores</li>
           </ol>
         </div>
@@ -33,31 +23,19 @@
 
   <!-- Main content -->
   <section class="content">
-    <div class="container-fluid"> 
-      
-      <!-- Tarjeta principal de consulta (siguiendo el estilo de dashboard) -->
+    <div class="container-fluid">
       <div class="row">
+        <!-- Formulario de consulta por NIT -->
         <div class="col-md-8">
           <div class="card card-primary">
             <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-search"></i>
-                Consultar Proveedor por NIT
-              </h3>
+              <h3 class="card-title">Consultar Proveedor por NIT</h3>
             </div>
             <div class="card-body">
-              {% if error %}
-              <div class="alert alert-danger alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <h5><i class="icon fas fa-ban"></i> Error!</h5>
-                {{ error }}
-              </div>
-              {% endif %}
-              
-              <form id="consultaNitForm" method="post">
+              <form id="consultaNitForm" method="post" action="{% url 'proveedor:consultar_nit' %}">
                 {% csrf_token %}
                 <div class="form-group">
-                  <label for="nit">NIT (sin dígito de verificación)</label>
+                  <label for="nit">Número de Identificación Tributaria (NIT)</label>
                   <div class="input-group">
                     <input type="text" 
                            class="form-control" 
@@ -69,7 +47,6 @@
                            required>
                     <div class="input-group-append">
                       <button class="btn btn-primary" type="submit" id="btnConsultar">
-                        <i class="fas fa-search"></i>
                         Consultar
                       </button>
                     </div>
@@ -80,13 +57,13 @@
                 </div>
               </form>
               
-              <!-- Área de resultados (oculta inicialmente) -->
+              <!-- Área de resultados -->
               <div id="resultadosArea" style="display: none;">
                 <hr>
                 <div id="resultadoConsulta"></div>
               </div>
               
-              <!-- Loading spinner (siguiendo tu patrón) -->
+              <!-- Loading spinner -->
               <div id="loadingSpinner" style="display: none;">
                 <hr>
                 <div class="text-center">
@@ -100,53 +77,37 @@
           </div>
         </div>
         
-        <!-- Sidebar con acciones (siguiendo tu patrón de layout) -->
+        <!-- Acciones rápidas -->
         <div class="col-md-4">
           <div class="card card-success">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-plus"></i>
-                Registro Manual
-              </h3>
-            </div>
-            <div class="card-body">
-              <p>¿El proveedor no fue encontrado?</p>
-              <a href="{% url 'proveedor:registrar' %}" class="btn btn-success btn-block">
-                <i class="fas fa-user-plus"></i>
+            <div class="card-body text-center">
+              <h5>Registro Manual</h5>
+              <p class="text-muted">¿El proveedor no fue encontrado?</p>
+              <a href="{% url 'proveedor:registrar' %}" class="btn btn-success">
                 Registrar Nuevo Proveedor
               </a>
             </div>
           </div>
           
           <div class="card card-info">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-list"></i>
-                Proveedores Registrados
-              </h3>
-            </div>
-            <div class="card-body">
-              <p>Consulta todos los proveedores registrados</p>
-              <a href="{% url 'proveedor:listar' %}" class="btn btn-info btn-block">
-                <i class="fas fa-list"></i>
-                Ver Todos los Proveedores
+            <div class="card-body text-center">
+              <h5>Proveedores Registrados</h5>
+              <p class="text-muted">Consulta todos los proveedores</p>
+              <a href="{% url 'proveedor:listar' %}" class="btn btn-info">
+                Ver Proveedores
               </a>
             </div>
           </div>
-
         </div>
       </div>
-    </div>
   </section>
-</div>
 
-<!-- Modal para proveedor no encontrado (siguiendo tu estilo de modales) -->
+<!-- Modal para proveedor no encontrado -->
 <div class="modal fade" id="proveedorNoEncontradoModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header bg-warning">
         <h4 class="modal-title">
-          <i class="fas fa-exclamation-triangle"></i>
           Proveedor No Encontrado
         </h4>
         <button type="button" class="close" data-dismiss="modal">
@@ -160,7 +121,6 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
         <a href="#" id="btnRegistrarManual" class="btn btn-success">
-          <i class="fas fa-user-plus"></i>
           Registrar Proveedor
         </a>
       </div>
@@ -168,7 +128,7 @@
   </div>
 </div>
 
-<!-- Scripts (siguiendo tu patrón de carga de scripts) -->
+<!-- Scripts -->
 <script src="{% static 'lib/adminlt320/plugins/jquery/jquery.min.js' %}"></script>
 <script src="{% static 'lib/bootstrap533dist/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'lib/adminlt320/dist/js/adminlte.min.js' %}"></script>
@@ -176,7 +136,7 @@
 
 <script>
 $(document).ready(function() {
-    // Configurar toastr (siguiendo tu patrón)
+    // Configurar toastr
     toastr.options = {
         "closeButton": true,
         "timeOut": "5000"
@@ -186,118 +146,102 @@ $(document).ready(function() {
     $('#consultaNitForm').on('submit', function(e) {
         e.preventDefault();
         
-        const nit = $('#nit').val().trim();
+        var nit = $('#nit').val().trim();
+        
+        // Validaciones básicas
         if (!nit) {
             toastr.error('Por favor ingresa un NIT');
             return;
         }
         
-        // Validar que solo sean números
-        if (!/^\d+$/.test(nit)) {
-            toastr.error('El NIT debe contener solo números');
+        if (!/^\d{7,15}$/.test(nit)) {
+            toastr.error('NIT inválido. Solo números, 7-15 dígitos');
             return;
         }
         
-        consultarNit(nit);
-    });
-    
-    function consultarNit(nit) {
-        // Mostrar loading (siguiendo tu patrón de UX)
+        // Mostrar loading
         $('#loadingSpinner').show();
         $('#resultadosArea').hide();
-        $('#btnConsultar').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Consultando...');
+        $('#btnConsultar').prop('disabled', true).text('Consultando...');
         
+        // Realizar consulta AJAX
         $.ajax({
-            url: '{% url "proveedor:consultar_nit" %}',
-            type: 'POST',
-            data: {
-                'nit': nit,
-                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
-            },
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: $(this).serialize(),
             success: function(response) {
                 $('#loadingSpinner').hide();
-                $('#btnConsultar').prop('disabled', false).html('<i class="fas fa-search"></i> Consultar');
+                $('#btnConsultar').prop('disabled', false).text('Consultar');
                 
                 if (response.success) {
-                    mostrarProveedor(response);
-                } else if (response.not_found) {
-                    mostrarProveedorNoEncontrado(nit);
+                    if (response.existe_local) {
+                        // Proveedor existe localmente
+                        $('#resultadoConsulta').html(`
+                            <div class="alert alert-success">
+                                <h6>Proveedor encontrado en el sistema</h6>
+                                <p><strong>Nombre:</strong> ${response.proveedor.nombre}</p>
+                                <p><strong>NIT:</strong> ${response.proveedor.nit}</p>
+                                <p><strong>Teléfono:</strong> ${response.proveedor.telefono || 'No disponible'}</p>
+                                <a href="${response.detalle_url}" class="btn btn-primary btn-sm">Ver Detalles</a>
+                            </div>
+                        `);
+                    } else if (response.api_data) {
+                        // Proveedor encontrado en API
+                        var apiData = response.api_data;
+                        $('#resultadoConsulta').html(`
+                            <div class="alert alert-info">
+                                <h6>Proveedor encontrado en API</h6>
+                                <p><strong>Nombre:</strong> ${apiData.nombre}</p>
+                                <p><strong>NIT:</strong> ${apiData.nit}</p>
+                                <p><strong>Teléfono:</strong> ${apiData.telefono || 'No disponible'}</p>
+                                <button class="btn btn-success btn-sm" onclick="registrarDesdeAPI('${nit}')">
+                                    Registrar en Sistema
+                                </button>
+                            </div>
+                        `);
+                    }
+                    $('#resultadosArea').show();
                 } else {
-                    toastr.error(response.error || 'Error en la consulta');
+                    // Proveedor no encontrado
+                    $('#nitNoEncontrado').text(nit);
+                    $('#btnRegistrarManual').attr('href', '{% url "proveedor:registrar" %}?nit=' + nit);
+                    $('#proveedorNoEncontradoModal').modal('show');
+                    toastr.warning(response.error || 'Proveedor no encontrado');
                 }
             },
-            error: function(xhr, status, error) {
+            error: function() {
                 $('#loadingSpinner').hide();
-                $('#btnConsultar').prop('disabled', false).html('<i class="fas fa-search"></i> Consultar');
-                toastr.error('Error de conexión');
+                $('#btnConsultar').prop('disabled', false).text('Consultar');
+                toastr.error('Error en la consulta. Inténtalo de nuevo.');
             }
         });
-    }
+    });
     
-    function mostrarProveedor(response) {
-        const proveedor = response.proveedor;
-        const esLocal = response.existe_local;
+    // Función para registrar desde API
+    window.registrarDesdeAPI = function(nit) {
+        toastr.info('Registrando proveedor desde API...');
         
-        let html = `
-            <div class="alert alert-success alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <h5><i class="icon fas fa-check"></i> Proveedor Encontrado</h5>
-                ${response.message}
-            </div>
-            
-            <div class="card card-widget widget-user">
-                <div class="widget-user-header bg-info">
-                    <h3 class="widget-user-username">${proveedor.nombre}</h3>
-                    <h5 class="widget-user-desc">NIT: ${proveedor.nit}</h5>
-                </div>
-                <div class="card-footer">
-                    <div class="row">
-                        <div class="col-sm-4 border-right">
-                            <div class="description-block">
-                                <h5 class="description-header">${proveedor.telefono || 'N/A'}</h5>
-                                <span class="description-text">TELÉFONO</span>
-                            </div>
-                        </div>
-                        <div class="col-sm-4 border-right">
-                            <div class="description-block">
-                                <h5 class="description-header">${proveedor.correo || 'N/A'}</h5>
-                                <span class="description-text">CORREO</span>
-                            </div>
-                        </div>
-                        <div class="col-sm-4">
-                            <div class="description-block">
-                                <h5 class="description-header">${proveedor.municipio || 'N/A'}</h5>
-                                <span class="description-text">MUNICIPIO</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="text-center">
-                <p><strong>¿La información está correcta?</strong></p>
-                <a href="/proveedor/detalle/${response.proveedor_id}/" class="btn btn-primary mr-2">
-                    <i class="fas fa-check"></i>
-                    Información Correcta
-                </a>
-                <a href="/proveedor/detalle/${response.proveedor_id}/" class="btn btn-warning">
-                    <i class="fas fa-edit"></i>
-                    Actualizar Información
-                </a>
-            </div>
-        `;
-        
-        $('#resultadoConsulta').html(html);
-        $('#resultadosArea').show();
-    }
-    
-    function mostrarProveedorNoEncontrado(nit) {
-        $('#nitNoEncontrado').text(nit);
-        $('#btnRegistrarManual').attr('href', `/proveedor/registrar/?nit=${nit}`);
-        $('#proveedorNoEncontradoModal').modal('show');
-    }
+        $.ajax({
+            url: '{% url "proveedor:registrar" %}',
+            method: 'POST',
+            data: {
+                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val(),
+                'nit': nit,
+                'desde_api': 'true'
+            },
+            success: function(response) {
+                if (response.success) {
+                    toastr.success('Proveedor registrado exitosamente');
+                    window.location.href = response.redirect_url;
+                } else {
+                    toastr.error(response.error || 'Error al registrar');
+                }
+            },
+            error: function() {
+                toastr.error('Error al registrar proveedor');
+            }
+        });
+    };
 });
 </script>
-
-</body>
-</html>
+{% endblock %}

@@ -1,21 +1,10 @@
+{% extends "navbar.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Lista de Proveedores</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{% static 'lib/adminlt320/dist/css/adminlte.min.css' %}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-    <link rel="stylesheet" href="{% static 'lib/adminlt320/plugins/fontawesome-free/css/all.min.css' %}">
-    <link rel="stylesheet" href="{% static 'lib/adminlt320/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
-    <link rel="stylesheet" href="{% static 'lib/adminlt320/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
-</head>
 
-<body class="hold-transition sidebar-mini layout-fixed">
-<div class="wrapper">
+{% block title %}Lista de Proveedores{% endblock %}
 
-  <!-- Content Header -->
+{% block content %}
+<!-- Content Header -->
   <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
@@ -24,7 +13,7 @@
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'index' %}">Inicio</a></li>
             <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Proveedores</a></li>
             <li class="breadcrumb-item active">Lista</li>
           </ol>
@@ -37,22 +26,14 @@
   <section class="content">
     <div class="container-fluid">
       
-      <!-- Filtros (siguiendo tu patrón de table_report.html) -->
-      <div class="card card-default collapsed-card">
+      <!-- Filtros de búsqueda - SIEMPRE VISIBLE -->
+      <div class="card card-default">
         <div class="card-header">
-          <h3 class="card-title">
-            <i class="fas fa-filter"></i>
-            Filtros de Búsqueda
-          </h3>
-          <div class="card-tools">
-            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-              <i class="fas fa-plus"></i>
-            </button>
-          </div>
+          <h3 class="card-title">Filtros de Búsqueda</h3>
         </div>
         <div class="card-body">
           <form method="get" class="row">
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="form-group">
                 <label for="search">Buscar por nombre o NIT</label>
                 <input type="text" 
@@ -63,7 +44,7 @@
                        placeholder="Nombre o NIT del proveedor">
               </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="form-group">
                 <label for="tipo">Tipo de Empresa</label>
                 <select class="form-control" id="tipo" name="tipo">
@@ -74,25 +55,6 @@
                   <option value="PERSONA JURÍDICA" {% if tipo_filtro == 'PERSONA JURÍDICA' %}selected{% endif %}>
                     Persona Jurídica
                   </option>
-                  <option value="EMPRESA UNIPERSONAL" {% if tipo_filtro == 'EMPRESA UNIPERSONAL' %}selected{% endif %}>
-                    Empresa Unipersonal
-                  </option>
-                  <option value="SOCIEDAD ANÓNIMA" {% if tipo_filtro == 'SOCIEDAD ANÓNIMA' %}selected{% endif %}>
-                    Sociedad Anónima
-                  </option>
-                  <option value="COOPERATIVA" {% if tipo_filtro == 'COOPERATIVA' %}selected{% endif %}>
-                    Cooperativa
-                  </option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <div class="form-group">
-                <label for="estado">Estado</label>
-                <select class="form-control" id="estado" name="estado">
-                  <option value="">Todos</option>
-                  <option value="true" {% if estado_filtro == 'true' %}selected{% endif %}>Activos</option>
-                  <option value="false" {% if estado_filtro == 'false' %}selected{% endif %}>Inactivos</option>
                 </select>
               </div>
             </div>
@@ -101,19 +63,12 @@
                 <label>&nbsp;</label>
                 <div>
                   <button type="submit" class="btn btn-primary mr-2">
-                    <i class="fas fa-search"></i>
                     Buscar
                   </button>
                   <a href="{% url 'proveedor:listar' %}" class="btn btn-secondary mr-2">
-                    <i class="fas fa-times"></i>
                     Limpiar
                   </a>
-                  <a href="{% url 'proveedor:index' %}" class="btn btn-info mr-2">
-                    <i class="fas fa-search"></i>
-                    Nueva Consulta
-                  </a>
                   <a href="{% url 'proveedor:registrar' %}" class="btn btn-success">
-                    <i class="fas fa-plus"></i>
                     Registrar
                   </a>
                 </div>
@@ -123,11 +78,10 @@
         </div>
       </div>
       
-      <!-- Tabla de proveedores (siguiendo tu patrón exacto) -->
+      <!-- Tabla de proveedores -->
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-users"></i>
             Proveedores Registrados ({{ proveedores.count }})
           </h3>
         </div>
@@ -136,136 +90,89 @@
           {% if error %}
           <div class="alert alert-danger alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <h5><i class="icon fas fa-ban"></i> Error!</h5>
+            <h5>Error!</h5>
             {{ error }}
           </div>
           {% endif %}
           
           {% if proveedores %}
-          <table id="proveedores-table" class="table table-bordered table-striped">
-            <thead>
-              <tr>
-                <th>NIT</th>
-                <th>Nombre/Razón Social</th>
-                <th>Teléfono</th>
-                <th>Correo</th>
-                <th>Ubicación</th>
-                <th>Tipo</th>
-                <th>Estado</th>
-                <th class="text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for proveedor in proveedores %}
-              <tr>
-                <td>
-                  <strong>{{ proveedor.nit }}</strong>
-                </td>
-                <td>
-                  <div>
-                    <strong>{{ proveedor.nombre|truncatechars:40 }}</strong>
+          <div class="table-responsive">
+            <table id="proveedores-table" class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>NIT</th>
+                  <th>Nombre/Razón Social</th>
+                  <th>Teléfono</th>
+                  <th>Correo</th>
+                  <th>Ubicación</th>
+                  <th>Tipo</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for proveedor in proveedores %}
+                <tr>
+                  <td>
+                    <strong>{{ proveedor.nit }}</strong>
+                  </td>
+                  <td>
+                    <strong>{{ proveedor.nombre }}</strong>
                     {% if proveedor.nombre_representante_legal %}
-                    <br>
-                    <small class="text-muted">
-                      Rep. Legal: {{ proveedor.nombre_representante_legal|truncatechars:30 }}
-                    </small>
+                    <br><small class="text-muted">Rep: {{ proveedor.nombre_representante_legal }}</small>
                     {% endif %}
-                  </div>
-                </td>
-                <td>
-                  {% if proveedor.telefono %}
-                    <span class="text-primary">{{ proveedor.telefono }}</span>
-                  {% else %}
-                    <span class="text-muted">Sin teléfono</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if proveedor.correo %}
-                    <a href="mailto:{{ proveedor.correo }}" class="text-info">
-                      {{ proveedor.correo|truncatechars:25 }}
-                    </a>
-                  {% else %}
-                    <span class="text-muted">Sin correo</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if proveedor.municipio %}
-                    {{ proveedor.municipio }}
-                    {% if proveedor.departamento %}
-                    <br><small class="text-muted">{{ proveedor.departamento }}</small>
+                  </td>
+                  <td>
+                    {{ proveedor.telefono|default:"No disponible" }}
+                    {% if proveedor.telefono_representante_legal %}
+                    <br><small class="text-muted">{{ proveedor.telefono_representante_legal }}</small>
                     {% endif %}
-                  {% else %}
-                    <span class="text-muted">No especificado</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if proveedor.tipo_empresa == 'PERSONA NATURAL COLOMBIANA' %}
-                    <span class="badge badge-success">Persona Natural</span>
-                  {% else %}
-                    <span class="badge badge-primary">{{ proveedor.tipo_empresa|truncatechars:15 }}</span>
-                  {% endif %}
-                  
-                  {% if proveedor.es_pyme_display %}
-                  <br><span class="badge badge-warning badge-sm mt-1">PyME</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if proveedor.get_estado_display == 'Activo' %}
-                    <span class="badge badge-success">{{ proveedor.get_estado_display }}</span>
-                  {% else %}
-                    <span class="badge badge-danger">{{ proveedor.get_estado_display }}</span>
-                  {% endif %}
-                  
-                  {% if proveedor.activo != 'true' %}
-                  <br><span class="badge badge-secondary badge-sm mt-1">Deshabilitado</span>
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  <div class="btn-group btn-group-sm">
-                    <a href="{% url 'proveedor:detalle' proveedor.id %}" 
-                       class="btn btn-info btn-sm" 
-                       title="Ver detalles">
-                      <i class="fas fa-eye"></i>
-                    </a>
-                    <a href="{% url 'proveedor:detalle' proveedor.id %}" 
-                       class="btn btn-warning btn-sm" 
-                       title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                  </td>
+                  <td>
+                    {% if proveedor.correo %}
+                    <a href="mailto:{{ proveedor.correo }}">{{ proveedor.correo }}</a>
+                    {% else %}
+                    No disponible
+                    {% endif %}
+                  </td>
+                  <td>
+                    {{ proveedor.direccion|default:"No disponible" }}
+                    {% if proveedor.municipio %}
+                    <br><small class="text-muted">{{ proveedor.municipio }}</small>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge badge-info">
+                      {% if proveedor.tipo_empresa == 'PERSONA NATURAL COLOMBIANA' %}
+                        P. Natural
+                      {% elif proveedor.tipo_empresa == 'PERSONA JURÍDICA' %}
+                        P. Jurídica
+                      {% else %}
+                        {{ proveedor.tipo_empresa }}
+                      {% endif %}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                      <a href="{% url 'proveedor:detalle' proveedor.id %}" class="btn btn-primary btn-sm" title="Ver detalles">
+                        Ver
+                      </a>
+                      <a href="{% url 'proveedor:detalle' proveedor.id %}" class="btn btn-secondary btn-sm" title="Editar">
+                        Editar
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
           {% else %}
-          <!-- Estado vacío (siguiendo tu patrón) -->
-          <div class="text-center py-5">
-            <div class="mb-3">
-              <i class="fas fa-users fa-5x text-muted"></i>
-            </div>
-            <h5 class="text-muted">No se encontraron proveedores</h5>
-            {% if search %}
-            <p class="text-muted">
-              No hay proveedores que coincidan con "<strong>{{ search }}</strong>"
-            </p>
-            <a href="{% url 'proveedor:listar' %}" class="btn btn-secondary">
-              <i class="fas fa-times"></i>
-              Limpiar búsqueda
-            </a>
-            {% else %}
-            <p class="text-muted">
-              Aún no has registrado ningún proveedor
-            </p>
-            <a href="{% url 'proveedor:index' %}" class="btn btn-primary mr-2">
-              <i class="fas fa-search"></i>
-              Consultar Proveedor
-            </a>
+          <div class="alert alert-info">
+            <h5>Sin Resultados</h5>
+            <p>No se encontraron proveedores que coincidan con los filtros aplicados.</p>
             <a href="{% url 'proveedor:registrar' %}" class="btn btn-success">
-              <i class="fas fa-plus"></i>
-              Registrar Proveedor
+              Registrar Nuevo Proveedor
             </a>
-            {% endif %}
           </div>
           {% endif %}
         </div>
@@ -281,11 +188,9 @@
             <div class="col-sm-6 text-right">
               <div class="btn-group btn-group-sm">
                 <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
-                  <i class="fas fa-print"></i>
                   Imprimir
                 </button>
                 <button type="button" class="btn btn-outline-primary" onclick="exportarExcel()">
-                  <i class="fas fa-file-excel"></i>
                   Exportar
                 </button>
               </div>
@@ -298,7 +203,7 @@
   </section>
 </div>
 
-<!-- Scripts (siguiendo tu patrón exacto) -->
+<!-- Scripts -->
 <script src="{% static 'lib/adminlt320/plugins/jquery/jquery.min.js' %}"></script>
 <script src="{% static 'lib/bootstrap533dist/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'lib/adminlt320/plugins/datatables/jquery.dataTables.min.js' %}"></script>
@@ -306,101 +211,55 @@
 <script src="{% static 'lib/adminlt320/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
 <script src="{% static 'lib/adminlt320/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
 <script src="{% static 'lib/adminlt320/dist/js/adminlte.min.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
 
 <script>
 $(document).ready(function() {
-    // Inicializar DataTables si hay datos (siguiendo tu patrón)
+    // Inicializar DataTables si hay datos
     {% if proveedores %}
     $('#proveedores-table').DataTable({
         "responsive": true,
         "lengthChange": false,
         "autoWidth": false,
-        "searching": false,  // Deshabilitado porque usamos filtros personalizados
+        "searching": false,  // Usamos filtros personalizados
         "paging": true,
         "pageLength": 25,
         "info": true,
         "ordering": true,
-        "order": [[ 7, "desc" ]],  // Ordenar por fecha de registro desc
-        "columnDefs": [
-            { "orderable": false, "targets": 8 }  // Columna acciones no ordenable
-        ],
+        "order": [[ 0, "asc" ]],  // Ordenar por NIT
         "language": {
-            "decimal": "",
-            "emptyTable": "No hay datos disponibles",
-            "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-            "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
-            "infoFiltered": "(filtrado de _MAX_ entradas totales)",
-            "thousands": ",",
-            "lengthMenu": "Mostrar _MENU_ entradas",
-            "loadingRecords": "Cargando...",
-            "processing": "Procesando...",
-            "search": "Buscar:",
-            "zeroRecords": "No se encontraron registros coincidentes",
-            "paginate": {
-                "first": "Primero",
-                "last": "Último",
-                "next": "Siguiente",
-                "previous": "Anterior"
-            }
+            "url": "https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
         }
     });
     {% endif %}
     
-    // Focus en campo de búsqueda si está visible
-    if ($('.card-body').is(':visible')) {
-        $('#search').focus();
-    }
-});
-
-function exportarExcel() {
-    // Implementar exportación si es necesario
-    alert('Función de exportación próximamente');
-}
-
-// Función para imprimir solo la tabla (siguiendo tu patrón)
-window.addEventListener('beforeprint', function() {
-    // Ocultar elementos innecesarios para impresión
-    $('.btn, .card-header, .card-footer, .breadcrumb, .content-header').hide();
-});
-
-window.addEventListener('afterprint', function() {
-    // Restaurar elementos después de imprimir
-    $('.btn, .card-header, .card-footer, .breadcrumb, .content-header').show();
+    // Configurar toastr
+    toastr.options = {
+        "closeButton": true,
+        "timeOut": "3000"
+    };
+    
+    // Focus en el campo de búsqueda
+    $('#search').focus();
+    
+    // Función para exportar a Excel
+    window.exportarExcel = function() {
+        toastr.info('Función de exportar en desarrollo');
+    };
+    
+    // Auto-submit al cambiar filtros
+    $('#tipo').on('change', function() {
+        if ($(this).val() !== '') {
+            $(this).closest('form').submit();
+        }
+    });
+    
+    // Enter en búsqueda
+    $('#search').on('keypress', function(e) {
+        if (e.which === 13) {
+            $(this).closest('form').submit();
+        }
+    });
 });
 </script>
-
-<style>
-@media print {
-    .btn, .card-header, .card-footer, .breadcrumb, .content-header {
-        display: none !important;
-    }
-    
-    .card {
-        box-shadow: none !important;
-        border: none !important;
-    }
-    
-    .table {
-        font-size: 12px;
-    }
-}
-
-.table td {
-    vertical-align: middle;
-}
-
-.badge-sm {
-    font-size: 0.7em;
-}
-
-.btn-group-sm > .btn {
-    padding: 0.25rem 0.5rem;
-}
-
-.text-nowrap {
-    white-space: nowrap;
-}
-</style>
-
-</body>
-</html>
+{% endblock %}
