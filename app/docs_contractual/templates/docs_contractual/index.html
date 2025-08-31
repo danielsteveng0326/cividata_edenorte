@@ -25,45 +25,64 @@
 <section class="content">
   <div class="container-fluid">
     
-    <!-- Card de búsqueda -->
+    <!-- Filtros de búsqueda y año -->
     <div class="row mb-3">
       <div class="col-12">
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="fas fa-search mr-2"></i>Buscar Contrato
+              <i class="fas fa-search mr-2"></i>Buscar Contratos
             </h3>
           </div>
           <div class="card-body">
-            <form id="busqueda-form">
+            <form id="busqueda-form" method="get">
+              <!-- Inputs hidden para mantener estado -->
+              <input type="hidden" name="registros" id="registros_input" value="{{ registros_por_pagina }}">
+              <input type="hidden" name="pagina" id="pagina_input" value="{{ pagina_actual }}">
+              
               <div class="row">
-                <div class="col-md-5">
+                <div class="col-md-3">
                   <div class="form-group">
                     <label for="referencia">Referencia del Contrato:</label>
                     <input type="text" class="form-control" id="referencia" name="referencia" 
+                           value="{{ referencia_filtro }}"
                            placeholder="Ej: CPS-001-2025">
-                    <small class="form-text text-muted">Buscar por referencia exacta o parcial</small>
+                    <small class="form-text text-muted"></small>
                   </div>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-3">
                   <div class="form-group">
                     <label for="proveedor">Nombre del Proveedor:</label>
                     <input type="text" class="form-control" id="proveedor" name="proveedor" 
+                           value="{{ proveedor_filtro }}"
                            placeholder="Ej: EMPRESA CONSTRUCTORA S.A.S">
-                    <small class="form-text text-muted">Buscar por nombre aproximado del contratista</small>
+                    <small class="form-text text-muted"></small>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label for="año">Año:</label>
+                    <select class="form-control" id="año" name="año">
+                      {% for año in años_disponibles %}
+                        <option value="{{ año }}" {% if año == año_seleccionado %}selected{% endif %}>{{ año }}</option>
+                      {% endfor %}
+                    </select>
                   </div>
                 </div>
                 <div class="col-md-2">
                   <div class="form-group">
                     <label>&nbsp;</label>
-                    <div class="btn-group-vertical btn-block">
-                      <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search mr-1"></i>Buscar
-                      </button>
-                      <button type="button" class="btn btn-secondary btn-sm" id="btn-limpiar">
-                        <i class="fas fa-eraser mr-1"></i>Limpiar
-                      </button>
-                    </div>
+                    <button type="button" class="btn btn-primary form-control" onclick="submitFormConPagina1()">
+                      <i class="fas fa-search mr-1"></i>Buscar
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn btn-secondary form-control" onclick="limpiarFiltros()">
+                      <i class="fas fa-broom mr-1"></i>Limpiar
+                    </button>
                   </div>
                 </div>
               </div>
@@ -73,86 +92,714 @@
       </div>
     </div>
 
-    <!-- Card de resultados -->
-    <div class="row" id="resultados-section" style="display: none;">
+    <!-- Listado de contratos -->
+    <div class="row">
       <div class="col-12">
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="fas fa-list mr-2"></i>Resultados de la Búsqueda
+              <i class="fas fa-list mr-2"></i>Contratos del Año {{ año_seleccionado }}
             </h3>
             <div class="card-tools">
-              <span class="badge badge-info" id="total-resultados">0 contratos encontrados</span>
-              <a href="{% url 'docs_contractual:historial' %}" class="btn btn-outline-secondary btn-sm ml-2">
-                <i class="fas fa-history mr-1"></i>Ver Historial
-              </a>
-              <a href="{% url 'docs_contractual:plantillas' %}" class="btn btn-outline-info btn-sm ml-1">
-                <i class="fas fa-file-alt mr-1"></i>Plantillas
-              </a>
+              <span class="badge badge-info">{{ total_contratos }} contratos</span>
             </div>
           </div>
           <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-bordered table-striped" id="tabla-resultados">
-                <thead>
-                  <tr>
-                    <th width="5%">Seleccionar</th>
-                    <th width="15%">Referencia</th>
-                    <th width="35%">Objeto del Contrato</th>
-                    <th width="15%">Estado</th>
-                    <th width="25%">Proveedor</th>
-                    <th width="5%">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-resultados">
-                  <!-- Los resultados se cargarán dinámicamente -->
-                </tbody>
-              </table>
-            </div>
-            
-            <!-- Botón de designación -->
-            <div class="mt-3 text-center">
-              <button type="button" class="btn btn-success btn-lg" id="btn-designacion" 
-                      style="display: none;" disabled>
-                <i class="fas fa-file-word mr-2"></i>Generar Documento de Designación
-              </button>
-            </div>
+            {% if contratos %}
+              <!-- Selector de registros por página -->
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <div class="form-inline">
+                    <label for="registros_por_pagina" class="mr-2">Mostrar</label>
+                    <select id="registros_por_pagina" class="form-control form-control-sm mr-2" onchange="cambiarRegistrosPorPagina()">
+                      <option value="10" {% if registros_por_pagina == '10' %}selected{% endif %}>10</option>
+                      <option value="25" {% if registros_por_pagina == '25' %}selected{% endif %}>25</option>
+                      <option value="50" {% if registros_por_pagina == '50' %}selected{% endif %}>50</option>
+                      <option value="100" {% if registros_por_pagina == '100' %}selected{% endif %}>100</option>
+                      <option value="todos" {% if registros_por_pagina == 'todos' %}selected{% endif %}>Todos</option>
+                    </select>
+                    <span>registros</span>
+                  </div>
+                </div>
+                <div class="col-md-6 text-right">
+                  <small class="text-muted">
+                    {% if registros_por_pagina != 'todos' %}
+                      Mostrando {{ registro_inicio }} - {{ registro_fin }} de {{ total_contratos }} contratos
+                    {% else %}
+                      Mostrando todos los {{ total_contratos }} contratos
+                    {% endif %}
+                  </small>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th width="12%">Referencia</th>
+                      <th width="18%">Proveedor</th>
+                      <th width="10%">Fecha Contrato</th>
+                      <th width="10%">Fecha Fin</th>
+                      <th width="5%">Link</th>
+                      <th width="30%">Objeto</th>
+                      <th width="15%">Crea Acta</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for contrato in contratos %}
+                    <tr>
+                      <!-- Referencia -->
+                      <td>
+                        <strong class="text-primary">{{ contrato.referencia_del_contrato|default:"N/A" }}</strong>
+                      </td>
+                      
+                      <!-- Nombre del Proveedor -->
+                      <td>
+                        <small class="text-muted">{{ contrato.proveedor_adjudicado|default:"N/A"|truncatechars:60 }}</small>
+                      </td>
+                      
+                      <!-- Fecha Contrato -->
+                      <td>
+                        {% if contrato.fecha_de_firma %}
+                          <small>{{ contrato.fecha_de_firma|date:"d/m/Y" }}</small>
+                        {% else %}
+                          <small class="text-muted">N/A</small>
+                        {% endif %}
+                      </td>
+                      
+                      <!-- Fecha Fin -->
+                      <td>
+                        {% if contrato.fecha_de_fin_del_contrato %}
+                          <small>{{ contrato.fecha_de_fin_del_contrato|date:"d/m/Y" }}</small>
+                        {% else %}
+                          <small class="text-muted">N/A</small>
+                        {% endif %}
+                      </td>
+                      
+                      <!-- Link -->
+                      <td class="text-center">
+                        {% if contrato.url_proceso %}
+                          <a href="{{ contrato.url_proceso }}" target="_blank" 
+                             class="btn btn-sm btn-outline-primary" 
+                             title="Ver en SECOP">
+                            <i class="fas fa-external-link-alt"></i>
+                          </a>
+                        {% else %}
+                          <small class="text-muted">N/A</small>
+                        {% endif %}
+                      </td>
+                      
+                      <!-- Objeto (clickeable) -->
+                      <td>
+                        <span class="text-primary" 
+                              style="cursor: pointer; text-decoration: underline;"
+                              data-toggle="modal" 
+                              data-target="#modalObjeto{{ contrato.id }}"
+                              title="Clic para ver objeto completo">
+                          {{ contrato.descripcion_del_proceso|default:"N/A"|truncatechars:100 }}
+                        </span>
+                      </td>
+                      
+                      <!-- Columna Crea Acta - Los 3 botones -->
+                      <td class="text-center">
+                        <div class="btn-group-vertical btn-group-sm" role="group">
+                          <!-- Botón Designación (amarillo) -->
+                          <button class="btn btn-warning btn-sm mb-1" 
+                                  onclick="generarDesignacion({{ contrato.id }})" 
+                                  title="Crear Designación de Supervisor">
+                            <i class="fas fa-user-tie"></i> Designación
+                          </button>
+                          
+                          <!-- Botón Terminación (naranja) -->
+                          <button class="btn btn-sm mb-1" 
+                                  style="background-color: #fd7e14; color: white;"
+                                  onclick="alert('Funcionalidad en desarrollo')" 
+                                  title="Crear Terminación">
+                            <i class="fas fa-stop-circle"></i> Terminación
+                          </button>
+                          
+                          <!-- Botón Liquidación (rojo) -->
+                          <button class="btn btn-danger btn-sm" 
+                                  onclick="alert('Funcionalidad en desarrollo')" 
+                                  title="Crear Liquidación">
+                            <i class="fas fa-calculator"></i> Liquidación
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- Modal para mostrar objeto completo -->
+                    <div class="modal fade" id="modalObjeto{{ contrato.id }}" tabindex="-1" role="dialog">
+                      <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title">
+                              <i class="fas fa-file-alt mr-2"></i>Objeto del Contrato
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                              <span>&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            <div class="row mb-3">
+                              <div class="col-md-6">
+                                <strong>Referencia:</strong>
+                                <p class="text-primary">{{ contrato.referencia_del_contrato|default:"N/A" }}</p>
+                              </div>
+                              <div class="col-md-6">
+                                <strong>Proveedor:</strong>
+                                <p>{{ contrato.proveedor_adjudicado|default:"N/A" }}</p>
+                              </div>
+                            </div>
+                            <div class="row mb-3">
+                              <div class="col-12">
+                                <strong>Objeto del Contrato:</strong>
+                                <div class="mt-2 p-3 bg-light rounded">
+                                  {{ contrato.descripcion_del_proceso|default:"No se ha especificado objeto del contrato." }}
+                                </div>
+                              </div>
+                            </div>
+                            {% if contrato.valor_del_contrato %}
+                            <div class="row">
+                              <div class="col-md-6">
+                                <strong>Valor del Contrato:</strong>
+                                <p class="text-success">${{ contrato.valor_del_contrato|floatformat:0 }}</p>
+                              </div>
+                              <div class="col-md-6">
+                                <strong>Estado:</strong>
+                                <p>{{ contrato.estado_contrato|default:"N/A" }}</p>
+                              </div>
+                            </div>
+                            {% endif %}
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              
+              <!-- Controles de Paginación -->
+              {% if tiene_paginacion %}
+                <div class="row mt-3">
+                  <div class="col-12">
+                    <nav aria-label="Navegación de páginas">
+                      <ul class="pagination justify-content-center">
+                        <!-- Botón Anterior -->
+                        {% if pagina_anterior %}
+                          <li class="page-item">
+                            <a class="page-link" href="#" onclick="irAPagina({{ pagina_anterior }})">
+                              <i class="fas fa-chevron-left"></i> Anterior
+                            </a>
+                          </li>
+                        {% else %}
+                          <li class="page-item disabled">
+                            <span class="page-link">
+                              <i class="fas fa-chevron-left"></i> Anterior
+                            </span>
+                          </li>
+                        {% endif %}
+                        
+                        <!-- Primera página si no está en el rango -->
+                        {% if rango_paginas.0 > 1 %}
+                          <li class="page-item">
+                            <a class="page-link" href="#" onclick="irAPagina(1)">1</a>
+                          </li>
+                          {% if rango_paginas.0 > 2 %}
+                            <li class="page-item disabled">
+                              <span class="page-link">...</span>
+                            </li>
+                          {% endif %}
+                        {% endif %}
+                        
+                        <!-- Números de página -->
+                        {% for num_pagina in rango_paginas %}
+                          {% if num_pagina == pagina_actual %}
+                            <li class="page-item active">
+                              <span class="page-link">{{ num_pagina }}</span>
+                            </li>
+                          {% else %}
+                            <li class="page-item">
+                              <a class="page-link" href="#" onclick="irAPagina({{ num_pagina }})">{{ num_pagina }}</a>
+                            </li>
+                          {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Última página si no está en el rango -->
+                        {% if rango_paginas|last < total_paginas %}
+                          {% if rango_paginas|last < total_paginas|add:-1 %}
+                            <li class="page-item disabled">
+                              <span class="page-link">...</span>
+                            </li>
+                          {% endif %}
+                          <li class="page-item">
+                            <a class="page-link" href="#" onclick="irAPagina({{ total_paginas }})">{{ total_paginas }}</a>
+                          </li>
+                        {% endif %}
+                        
+                        <!-- Botón Siguiente -->
+                        {% if pagina_siguiente %}
+                          <li class="page-item">
+                            <a class="page-link" href="#" onclick="irAPagina({{ pagina_siguiente }})">
+                              Siguiente <i class="fas fa-chevron-right"></i>
+                            </a>
+                          </li>
+                        {% else %}
+                          <li class="page-item disabled">
+                            <span class="page-link">
+                              Siguiente <i class="fas fa-chevron-right"></i>
+                            </span>
+                          </li>
+                        {% endif %}
+                      </ul>
+                    </nav>
+                  </div>
+                </div>
+                
+                <!-- Información de paginación -->
+                <div class="row">
+                  <div class="col-12 text-center">
+                    <small class="text-muted">
+                      Página {{ pagina_actual }} de {{ total_paginas }} 
+                      ({{ registro_inicio }} - {{ registro_fin }} de {{ total_contratos }} registros)
+                    </small>
+                  </div>
+                </div>
+              {% endif %}
+              
+            {% else %}
+              <div class="alert alert-warning">
+                <h5><i class="fas fa-exclamation-triangle mr-2"></i>No hay contratos</h5>
+                <p>No se encontraron contratos {% if referencia_filtro or proveedor_filtro %}para los filtros aplicados{% else %}para el año {{ año_seleccionado }}{% endif %}.</p>
+                <p class="mb-0">
+                  {% if referencia_filtro or proveedor_filtro %}
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="limpiarFiltros()">
+                      <i class="fas fa-broom mr-1"></i>Limpiar filtros
+                    </button>
+                  {% else %}
+                    Intenta seleccionar un año diferente en el filtro.
+                  {% endif %}
+                </p>
+              </div>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Card de información -->
-    <div class="row" id="info-section">
-      <div class="col-12">
-        <div class="card card-info">
-          <div class="card-header">
-            <h3 class="card-title">
-              <i class="fas fa-info-circle mr-2"></i>Información del Módulo
-            </h3>
-          </div>
-          <div class="card-body">
-            <h5>¿Cómo usar el módulo Docs Contractual?</h5>
-            <ol>
-              <li><strong>Buscar contrato:</strong> Use la referencia del contrato o el nombre del proveedor para encontrar el contrato de interés.</li>
-              <li><strong>Seleccionar contrato:</strong> Marque el checkbox del contrato deseado en los resultados.</li>
-              <li><strong>Generar documento:</strong> Haga clic en el botón "Generar Documento de Designación" para crear y descargar el documento Word.</li>
-            </ol>
-            
-            <div class="alert alert-warning">
-              <h6><i class="fas fa-exclamation-triangle mr-2"></i>Nota importante:</h6>
-              <p class="mb-0">El documento generado incluirá toda la información relevante del contrato seleccionado. 
-              Verifique que los datos del contrato estén completos antes de generar el documento.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    
   </div>
 </section>
 
-<!-- Loading Modal -->
+<script>
+// Función para cerrar modal de carga (método más robusto)
+function cerrarModalCarga() {
+    // Intentar múltiples métodos para cerrar el modal
+    try {
+        // Método 1: jQuery
+        if (typeof $ !== 'undefined') {
+            $('#loadingModal').modal('hide');
+        }
+        
+        // Método 2: Bootstrap nativo
+        const modal = document.getElementById('loadingModal');
+        if (modal) {
+            // Buscar instancia de Bootstrap
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                } else {
+                    // Crear nueva instancia y cerrar
+                    new bootstrap.Modal(modal).hide();
+                }
+            } else {
+                // Método manual: remover clases y backdrop
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                
+                // Remover backdrop si existe
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+                
+                // Restaurar padding del body
+                document.body.style.paddingRight = '';
+            }
+        }
+    } catch (error) {
+        console.error('Error al cerrar modal:', error);
+        // Fallback: ocultar por fuerza bruta
+        const modal = document.getElementById('loadingModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+        }
+    }
+}
+
+// Función para generar designación (con manejo mejorado del modal)
+function generarDesignacion(contratoId) {
+    console.log('Iniciando generación de documento para contrato:', contratoId);
+    
+    // Mostrar modal de carga
+    try {
+        if (typeof $ !== 'undefined') {
+            $('#loadingModal').modal('show');
+        } else {
+            const modal = document.getElementById('loadingModal');
+            if (modal) {
+                modal.style.display = 'block';
+                modal.classList.add('show');
+                document.body.classList.add('modal-open');
+            }
+        }
+    } catch (error) {
+        console.error('Error al mostrar modal:', error);
+    }
+    
+    // Timer de emergencia para cerrar modal después de 30 segundos
+    const emergencyTimer = setTimeout(() => {
+        console.warn('Cerrando modal por timeout');
+        cerrarModalCarga();
+    }, 30000);
+    
+    // Crear formulario para envío POST usando la URL correcta de Django
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "docs_contractual:generar_documento" %}';
+    form.style.display = 'none';
+    
+    // Agregar CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = getCSRFToken();
+    form.appendChild(csrfInput);
+    
+    // Agregar ID del contrato
+    const contratoInput = document.createElement('input');
+    contratoInput.type = 'hidden';
+    contratoInput.name = 'contrato_id';
+    contratoInput.value = contratoId;
+    form.appendChild(contratoInput);
+    
+    // Agregar al DOM
+    document.body.appendChild(form);
+    
+    // Usar fetch para mejor control
+    const formData = new FormData(form);
+    
+    fetch('{% url "docs_contractual:generar_documento" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        }
+    })
+    .then(response => {
+        console.log('Respuesta recibida:', response.status, response.statusText);
+        
+        if (response.ok) {
+            // Extraer el nombre del archivo del header Content-Disposition
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let fileName = `Designacion_Contrato_${contratoId}.docx`; // fallback
+            
+            if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (fileNameMatch && fileNameMatch[1]) {
+                    fileName = fileNameMatch[1].replace(/['"]/g, '');
+                }
+            }
+            
+            return { blob: response.blob(), fileName: fileName };
+        } else if (response.status === 403) {
+            throw new Error('Error de permisos. Recargue la página e intente nuevamente.');
+        } else if (response.status === 404) {
+            throw new Error('URL no encontrada. Verifique que el módulo esté configurado correctamente.');
+        } else {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+    })
+    .then(async (data) => {
+        console.log('Documento recibido, cerrando modal...');
+        const blob = await data.blob;
+        const fileName = data.fileName;
+        
+        // IMPORTANTE: Cerrar modal INMEDIATAMENTE
+        clearTimeout(emergencyTimer);
+        cerrarModalCarga();
+        
+        // Pequeño delay para asegurar que el modal se cerró
+        setTimeout(() => {
+            // Crear enlace de descarga con el nombre correcto del backend
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName; // Usar el nombre del backend
+            document.body.appendChild(a);
+            a.click();
+            
+            // Limpiar
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                if (document.body.contains(form)) {
+                    document.body.removeChild(form);
+                }
+            }, 100);
+            
+            // Mostrar mensaje de éxito
+            setTimeout(() => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Documento generado!',
+                        text: 'El documento se ha descargado exitosamente.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    alert('¡Documento generado exitosamente!');
+                }
+            }, 500);
+            
+        }, 100);
+    })
+    .catch(error => {
+        console.error('Error en la generación:', error);
+        
+        // Cerrar modal en caso de error
+        clearTimeout(emergencyTimer);
+        cerrarModalCarga();
+        
+        setTimeout(() => {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al generar documento',
+                    text: error.message || 'Ocurrió un error inesperado al generar el documento.',
+                    footer: 'Contacte al administrador si el problema persiste.'
+                });
+            } else {
+                alert('Error al generar el documento: ' + error.message);
+            }
+            
+            // Limpiar formulario
+            if (document.body.contains(form)) {
+                document.body.removeChild(form);
+            }
+        }, 100);
+    });
+}
+
+// Función para obtener CSRF token
+function getCSRFToken() {
+    // Buscar el token CSRF en diferentes lugares
+    let token = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (token) return token.value;
+    
+    // Alternativa: buscar en meta tag
+    token = document.querySelector('meta[name=csrf-token]');
+    if (token) return token.getAttribute('content');
+    
+    // Alternativa: buscar en cookies
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue || '';
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+    const form = document.getElementById('busqueda-form');
+    
+    // Limpiar campos de texto
+    document.getElementById('referencia').value = '';
+    document.getElementById('proveedor').value = '';
+    
+    // Mantener el año actual seleccionado
+    document.getElementById('año').value = '{{ año_actual }}';
+    
+    // Reiniciar página a 1
+    let paginaInput = document.getElementById('pagina_input');
+    if (!paginaInput) {
+        paginaInput = document.createElement('input');
+        paginaInput.type = 'hidden';
+        paginaInput.name = 'pagina';
+        paginaInput.id = 'pagina_input';
+        form.appendChild(paginaInput);
+    }
+    paginaInput.value = '1';
+    
+    // Mantener registros por página actual
+    const registros = document.getElementById('registros_por_pagina').value;
+    let registrosInput = document.getElementById('registros_input');
+    if (!registrosInput) {
+        registrosInput = document.createElement('input');
+        registrosInput.type = 'hidden';
+        registrosInput.name = 'registros';
+        registrosInput.id = 'registros_input';
+        form.appendChild(registrosInput);
+    }
+    registrosInput.value = registros;
+    
+    form.submit();
+}
+
+// Función para cambiar registros por página
+function cambiarRegistrosPorPagina() {
+    const registros = document.getElementById('registros_por_pagina').value;
+    const form = document.getElementById('busqueda-form');
+    
+    // Crear input hidden para registros por página
+    let input = document.getElementById('registros_input');
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'registros';
+        input.id = 'registros_input';
+        form.appendChild(input);
+    }
+    input.value = registros;
+    
+    // Reiniciar a página 1 cuando cambio el número de registros
+    let paginaInput = document.getElementById('pagina_input');
+    if (!paginaInput) {
+        paginaInput = document.createElement('input');
+        paginaInput.type = 'hidden';
+        paginaInput.name = 'pagina';
+        paginaInput.id = 'pagina_input';
+        form.appendChild(paginaInput);
+    }
+    paginaInput.value = '1';
+    
+    form.submit();
+}
+
+// Función para ir a una página específica
+function irAPagina(numeroPagina) {
+    const form = document.getElementById('busqueda-form');
+    
+    // Crear o actualizar input hidden para página
+    let paginaInput = document.getElementById('pagina_input');
+    if (!paginaInput) {
+        paginaInput = document.createElement('input');
+        paginaInput.type = 'hidden';
+        paginaInput.name = 'pagina';
+        paginaInput.id = 'pagina_input';
+        form.appendChild(paginaInput);
+    }
+    paginaInput.value = numeroPagina;
+    
+    // Mantener el número de registros actual
+    const registros = document.getElementById('registros_por_pagina').value;
+    let registrosInput = document.getElementById('registros_input');
+    if (!registrosInput) {
+        registrosInput = document.createElement('input');
+        registrosInput.type = 'hidden';
+        registrosInput.name = 'registros';
+        registrosInput.id = 'registros_input';
+        form.appendChild(registrosInput);
+    }
+    registrosInput.value = registros;
+    
+    form.submit();
+}
+
+// Auto-submit del formulario cuando cambie el año
+document.getElementById('año').addEventListener('change', function() {
+    const form = document.getElementById('busqueda-form');
+    
+    // Reiniciar a página 1 cuando cambio el año
+    let paginaInput = document.getElementById('pagina_input');
+    if (!paginaInput) {
+        paginaInput = document.createElement('input');
+        paginaInput.type = 'hidden';
+        paginaInput.name = 'pagina';
+        paginaInput.id = 'pagina_input';
+        form.appendChild(paginaInput);
+    }
+    paginaInput.value = '1';
+    
+    // Mantener registros por página actual
+    const registros = document.getElementById('registros_por_pagina').value;
+    let registrosInput = document.getElementById('registros_input');
+    if (!registrosInput) {
+        registrosInput = document.createElement('input');
+        registrosInput.type = 'hidden';
+        registrosInput.name = 'registros';
+        registrosInput.id = 'registros_input';
+        form.appendChild(registrosInput);
+    }
+    registrosInput.value = registros;
+    
+    form.submit();
+});
+
+// Envío de formulario con Enter en los campos de texto (reinicia a página 1)
+function submitFormConPagina1() {
+    const form = document.getElementById('busqueda-form');
+    
+    // Reiniciar a página 1 en nuevas búsquedas
+    let paginaInput = document.getElementById('pagina_input');
+    if (!paginaInput) {
+        paginaInput = document.createElement('input');
+        paginaInput.type = 'hidden';
+        paginaInput.name = 'pagina';
+        paginaInput.id = 'pagina_input';
+        form.appendChild(paginaInput);
+    }
+    paginaInput.value = '1';
+    
+    // Mantener registros por página actual
+    const registros = document.getElementById('registros_por_pagina').value;
+    let registrosInput = document.getElementById('registros_input');
+    if (!registrosInput) {
+        registrosInput = document.createElement('input');
+        registrosInput.type = 'hidden';
+        registrosInput.name = 'registros';
+        registrosInput.id = 'registros_input';
+        form.appendChild(registrosInput);
+    }
+    registrosInput.value = registros;
+    
+    form.submit();
+}
+
+document.getElementById('referencia').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        submitFormConPagina1();
+    }
+});
+
+document.getElementById('proveedor').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        submitFormConPagina1();
+    }
+});
+</script>
+
+<!-- Loading Modal (Restaurado del original) -->
 <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -166,7 +813,7 @@
         <!-- Botón de emergencia que aparece después de 10 segundos -->
         <div class="mt-3" id="emergency-close" style="display: none;">
           <small class="text-muted d-block mb-2">¿El proceso está tardando mucho?</small>
-          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cerrarModalLoading()">
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="$('#loadingModal').modal('hide');">
             <i class="fas fa-times mr-1"></i>Cerrar
           </button>
         </div>
@@ -175,317 +822,7 @@
   </div>
 </div>
 
-{% endblock %}
+<!-- Token CSRF hidden para JavaScript (Restaurado del original) -->
+{% csrf_token %}
 
-{% block extra_js %}
-<!-- Token CSRF hidden para JavaScript -->
-<input type="hidden" id="csrf_token" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-
-<script>
-// Obtener CSRF token desde el input hidden
-function getCSRFToken() {
-    return document.getElementById('csrf_token').value;
-}
-
-// Configurar jQuery para incluir CSRF token en todas las peticiones AJAX
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        if (!this.crossDomain) {
-            xhr.setRequestHeader("X-CSRFToken", getCSRFToken());
-        }
-    }
-});
-
-$(document).ready(function() {
-    let contratoSeleccionado = null;
-    
-    // Manejar envío del formulario de búsqueda
-    $('#busqueda-form').on('submit', function(e) {
-        e.preventDefault();
-        buscarContratos();
-    });
-    
-    // Manejar botón limpiar
-    $('#btn-limpiar').on('click', function() {
-        limpiarFormulario();
-    });
-    
-    // Función para limpiar formulario
-    function limpiarFormulario() {
-        $('#referencia').val('');
-        $('#proveedor').val('');
-        $('#resultados-section').hide();
-        $('#info-section').show();
-        $('#btn-designacion').hide().prop('disabled', true);
-        contratoSeleccionado = null;
-        $('#tbody-resultados').empty();
-        $('#total-resultados').text('0 contratos encontrados');
-    }
-    
-    // Función para buscar contratos
-    function buscarContratos() {
-        const referencia = $('#referencia').val().trim();
-        const proveedor = $('#proveedor').val().trim();
-        
-        if (!referencia && !proveedor) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Campos requeridos',
-                text: 'Debe ingresar al menos una referencia o nombre de proveedor para buscar.'
-            });
-            return;
-        }
-        
-        // Mostrar loading
-        $('#tbody-resultados').html('<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Buscando...</td></tr>');
-        $('#resultados-section').show();
-        
-        // Realizar búsqueda AJAX
-        $.ajax({
-            url: '{% url "docs_contractual:buscar_contratos" %}',
-            method: 'GET',
-            data: {
-                referencia: referencia,
-                proveedor: proveedor
-            },
-            success: function(response) {
-                if (response.success) {
-                    mostrarResultados(response.contratos);
-                    $('#total-resultados').text(response.total + ' contratos encontrados');
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.error || 'Error al buscar contratos'
-                    });
-                }
-            },
-            error: function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de conexión',
-                    text: 'No se pudo conectar con el servidor'
-                });
-            }
-        });
-    }
-    
-    // Función para mostrar resultados
-    function mostrarResultados(contratos) {
-        const tbody = $('#tbody-resultados');
-        tbody.empty();
-        
-        if (contratos.length === 0) {
-            tbody.html('<tr><td colspan="6" class="text-center text-muted">No se encontraron contratos</td></tr>');
-            return;
-        }
-        
-        contratos.forEach(function(contrato) {
-            const row = `
-                <tr>
-                    <td class="text-center">
-                        <input type="radio" name="contrato_seleccionado" value="${contrato.id}" 
-                               class="contrato-radio" data-contrato='${JSON.stringify(contrato)}'>
-                    </td>
-                    <td><strong>${contrato.referencia_del_contrato}</strong></td>
-                    <td class="text-truncate" style="max-width: 300px;" title="${contrato.objeto_del_contrato}">
-                        ${contrato.objeto_del_contrato}
-                    </td>
-                    <td>
-                        <span class="badge badge-${getEstadoBadge(contrato.estado_contrato)}">
-                            ${contrato.estado_contrato}
-                        </span>
-                    </td>
-                    <td>${contrato.proveedor_adjudicado}</td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-outline-info" onclick="verDetalles('${contrato.id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            tbody.append(row);
-        });
-        
-        // Ocultar sección de información
-        $('#info-section').hide();
-    }
-    
-    // Manejar selección de contrato
-    $(document).on('change', '.contrato-radio', function() {
-        // Remover clase de selección anterior
-        $('tr').removeClass('table-success');
-        
-        if ($(this).is(':checked')) {
-            contratoSeleccionado = JSON.parse($(this).attr('data-contrato'));
-            $('#btn-designacion').show().prop('disabled', false);
-            
-            // Agregar clase visual al row seleccionado
-            $(this).closest('tr').addClass('table-success');
-            
-            // Mostrar información del contrato seleccionado
-            const info = `Contrato seleccionado: ${contratoSeleccionado.referencia_del_contrato} - ${contratoSeleccionado.proveedor_adjudicado}`;
-            $('#total-resultados').html(`
-                <span class="badge badge-success">
-                    <i class="fas fa-check mr-1"></i>${info}
-                </span>
-            `);
-        }
-    });
-    
-    // Manejar clic en botón de designación
-    $('#btn-designacion').on('click', function() {
-        if (!contratoSeleccionado) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Contrato no seleccionado',
-                text: 'Debe seleccionar un contrato antes de generar el documento.'
-            });
-            return;
-        }
-        
-        generarDocumentoMejorado();
-    });
-    
-    // Función para cerrar modal de forma forzada (global)
-    window.cerrarModalLoading = function() {
-        $('#loadingModal').modal('hide');
-        $('.modal-backdrop').remove();
-        $('body').removeClass('modal-open');
-        $('body').css('padding-right', '');
-        $('#emergency-close').hide();
-        clearTimeout(window.emergencyTimer);
-    }
-    
-    // Función mejorada para generar documento
-    function generarDocumentoMejorado() {
-        if (!contratoSeleccionado) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Contrato no seleccionado',
-                text: 'Debe seleccionar un contrato antes de generar el documento.'
-            });
-            return;
-        }
-        
-        $('#loadingModal').modal('show');
-        
-        // Mostrar botón de emergencia después de 10 segundos
-        window.emergencyTimer = setTimeout(() => {
-            $('#emergency-close').fadeIn();
-        }, 10000);
-        
-        // Crear formulario para envío POST
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{% url "docs_contractual:generar_documento" %}';
-        form.style.display = 'none';
-        
-        // Agregar CSRF token
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = getCSRFToken();
-        form.appendChild(csrfInput);
-        
-        // Agregar ID del contrato
-        const contratoInput = document.createElement('input');
-        contratoInput.type = 'hidden';
-        contratoInput.name = 'contrato_id';
-        contratoInput.value = contratoSeleccionado.id;
-        form.appendChild(contratoInput);
-        
-        // Agregar al DOM y enviar
-        document.body.appendChild(form);
-        
-        // Usar fetch para mejor control
-        const formData = new FormData(form);
-        
-        fetch('{% url "docs_contractual:generar_documento" %}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': getCSRFToken()
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.blob();
-            } else if (response.status === 403) {
-                throw new Error('Error de permisos. Recargue la página e intente nuevamente.');
-            } else {
-                throw new Error('Error al generar el documento');
-            }
-        })
-        .then(blob => {
-            // IMPORTANTE: Cerrar modal ANTES de procesar la descarga
-            cerrarModalLoading();
-            
-            // Crear enlace de descarga
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Designacion_${contratoSeleccionado.referencia_del_contrato.replace(/[\/\s]/g, '_')}_${new Date().getTime()}.docx`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            // Pequeño delay para asegurar que el modal se cerró
-            setTimeout(() => {
-                // Mostrar mensaje de éxito y limpiar selección
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Documento generado!',
-                    text: 'El documento se ha descargado exitosamente.',
-                    confirmButtonText: 'Generar otro documento'
-                }).then(() => {
-                    // Limpiar selección y ocultar botón
-                    $('input[name="contrato_seleccionado"]').prop('checked', false);
-                    $('tr').removeClass('table-success');
-                    $('#btn-designacion').hide().prop('disabled', true);
-                    contratoSeleccionado = null;
-                    
-                    // Restaurar contador original
-                    const totalContratos = $('#tbody-resultados tr').length;
-                    $('#total-resultados').html(`<span class="badge badge-info">${totalContratos} contratos encontrados</span>`);
-                });
-            }, 300);
-        })
-        .catch(error => {
-            cerrarModalLoading();
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message
-            });
-        })
-        .finally(() => {
-            // Limpiar formulario temporal y asegurar que el modal esté cerrado
-            if (document.body.contains(form)) {
-                document.body.removeChild(form);
-            }
-            // Forzar cierre del modal como medida adicional
-            setTimeout(() => {
-                cerrarModalLoading();
-            }, 500);
-        });
-    }
-    
-    // Función auxiliar para obtener clase de badge según estado
-    function getEstadoBadge(estado) {
-        estado = estado.toLowerCase();
-        if (estado.includes('activo') || estado.includes('vigente')) return 'success';
-        if (estado.includes('terminado') || estado.includes('liquidado')) return 'secondary';
-        if (estado.includes('suspendido')) return 'warning';
-        return 'info';
-    }
-    
-    // Función para ver detalles (placeholder)
-    window.verDetalles = function(contratoId) {
-        // Implementar modal de detalles si es necesario
-        console.log('Ver detalles del contrato:', contratoId);
-    };
-});
-</script>
 {% endblock %}

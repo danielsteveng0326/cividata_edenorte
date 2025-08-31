@@ -8,10 +8,10 @@ urlpatterns = [
     # Vista principal
     path('', views.docs_contractual_index, name='index'),
     
-    # API para búsqueda de contratos
+    # API para búsqueda de contratos (mantener por compatibilidad)
     path('buscar-contratos/', views.buscar_contratos, name='buscar_contratos'),
     
-    # Generación de documentos
+    # Generación de documentos (ESTA ES LA URL ORIGINAL QUE SÍ FUNCIONABA)
     path('generar-documento/', views.generar_documento, name='generar_documento'),
     
     # Historial de documentos generados
