@@ -13,13 +13,89 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
   
   <style>
+    /* SLIDESHOW BACKGROUND */
+    .slideshow-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+    
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      animation: slideAnimation 15s infinite;
+      transform: scale(1);
+    }
+    
+    .slide:nth-child(1) {
+      background-image: url("{% load static %}{% static 'images/edenorte1.jpg' %}");
+      animation-delay: 0s;
+    }
+    
+    .slide:nth-child(2) {
+      background-image: url("{% load static %}{% static 'images/edenorte2.jpg' %}");
+      animation-delay: 5s;
+    }
+    
+    .slide:nth-child(3) {
+      background-image: url("{% load static %}{% static 'images/edenorte3.jpg' %}");
+      animation-delay: 10s;
+    }
+    
+    @keyframes slideAnimation {
+      0% {
+        opacity: 0;
+        transform: scale(1);
+      }
+      6.66% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      33.33% {
+        opacity: 1;
+        transform: scale(1.25);
+      }
+      40% {
+        opacity: 0;
+        transform: scale(1.25);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.25);
+      }
+    }
+    
+    /* Overlay semi-transparente para mejor legibilidad */
+    .slideshow-background::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      z-index: 1;
+    }
+    
     .login-page {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: transparent;
       min-height: 100vh;
       display: flex;
       align-items: center;
       position: relative;
       overflow: hidden;
+      z-index: 2;
     }
     
     .login-page::before {
@@ -43,7 +119,7 @@
     
     .login-box {
       position: relative;
-      z-index: 1;
+      z-index: 3;
       width: 400px;
       margin: 0 auto;
     }
@@ -75,11 +151,13 @@
     }
     
     .card {
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
       border: none;
       border-radius: 20px;
-      backdrop-filter: blur(10px);
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.15); /* translúcido */
+      backdrop-filter: blur(15px) saturate(180%);
+      -webkit-backdrop-filter: blur(15px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.3); /* borde tipo vidrio */
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
       overflow: hidden;
       position: relative;
     }
@@ -174,229 +252,94 @@
     
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
     }
     
-    .alert {
-      border: none;
-      border-radius: 12px;
-      padding: 15px 20px;
-      margin-bottom: 20px;
+    .text-center a {
+      color: #667eea;
+      text-decoration: none;
       font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .text-center a:hover {
+      color: #764ba2;
+      text-decoration: underline;
     }
     
     .alert-danger {
-      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-      color: white;
-    }
-    
-    .alert-success {
-      background: linear-gradient(135deg, #00b894, #00a085);
-      color: white;
-    }
-    
-    .footer-text {
-      text-align: center;
-      color: rgba(255, 255, 255, 0.8);
-      margin-top: 2rem;
-      font-size: 14px;
-    }
-    
-    .loading {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-    
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #ffffff;
-      border-top: 2px solid transparent;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    @media (max-width: 768px) {
-      .login-box {
-        width: 90%;
-        margin: 20px auto;
-      }
-      
-      .card-body {
-        padding: 2rem 1.5rem;
-      }
-      
-      .login-logo a {
-        font-size: 2rem;
-      }
-      
-      .login-logo i {
-        font-size: 2.5rem;
-      }
+      background: rgba(220, 53, 69, 0.1);
+      border: 1px solid rgba(220, 53, 69, 0.2);
+      color: #721c24;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
     }
   </style>
 </head>
-
 <body class="hold-transition login-page">
-  <div class="login-box">
-    <!-- Logo y título -->
-    <div class="login-logo">
-      <a href="#">
-        <i class="fas fa-file-contract"></i>
-        <div>
-          <strong>CiviData</strong><br>
-          <span style="font-size: 1.3rem;">Centro Integral de Visualización Inteligente</span>
-        </div>
-      </a>
-    </div>
+  <!-- SLIDESHOW BACKGROUND -->
+  <div class="slideshow-background">
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+  </div>
 
-    <!-- Card de login -->
+  <div class="login-box">
+    <!-- Login logo -->
+    <div class="login-logo">
+      <a><img src='https://i.postimg.cc/zyFm0y8N/Green-Modern-Marketing-Logo-2-1.png' border='0' alt='Green-Modern-Marketing-Logo-2-1'/></a>
+    </div>
+    <!-- /.login-logo -->
+    
     <div class="card">
       <div class="card-body login-card-body">
-        <h4><i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión</h4>
-        
-        <!-- Mensajes de Django -->
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-              <i class="fas fa-{% if message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %} mr-2"></i>
-              {{ message }}
-              <button type="button" class="close" data-dismiss="alert">
-                <span>&times;</span>
-              </button>
-            </div>
-          {% endfor %}
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          {{ error }}
+        </div>
         {% endif %}
 
-        <!-- Formulario de login -->
-        <form method="post" id="loginForm">
+        <form method="post">
           {% csrf_token %}
           
           <div class="input-group">
             <span class="input-group-text">
               <i class="fas fa-user"></i>
             </span>
-            <input type="text" 
-                   class="form-control" 
-                   name="username" 
-                   placeholder="Usuario" 
-                   required 
-                   autocomplete="username"
-                   autofocus>
+            <input type="text" name="username" class="form-control" placeholder="Usuario" required>
           </div>
-
+          
           <div class="input-group">
             <span class="input-group-text">
               <i class="fas fa-lock"></i>
             </span>
-            <input type="password" 
-                   class="form-control" 
-                   name="password" 
-                   placeholder="Contraseña" 
-                   required 
-                   autocomplete="current-password">
+            <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
           </div>
-
-          <div class="row align-items-center">
-            <div class="col-8">
-              <div class="icheck-primary">
-                <input type="checkbox" id="remember" name="remember">
-                <label for="remember" style="font-weight: normal; color: #6c757d;">
-                  Recordarme
-                </label>
-              </div>
-            </div>
-            <div class="col-5">
-              <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
-                <span class="btn-text">
-                  <i class="fas fa-sign-in-alt mr-1"></i>
-                  Entrar
-                </span>
-                <div class="loading">
-                  <div class="spinner"></div>
-                </div>
+          
+          <div class="row">
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-sign-in-alt me-2"></i>
+                Ingresar
               </button>
             </div>
           </div>
         </form>
+
       </div>
+      <!-- /.login-card-body -->
     </div>
   </div>
+  <!-- /.login-box -->
 
-  <!-- Scripts -->
+  <!-- jQuery -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+  <!-- AdminLTE App -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
 
-  <script>
-    $(document).ready(function() {
-      // Efecto de carga en el botón
-      $('#loginForm').on('submit', function() {
-        const btn = $('#loginBtn');
-        const btnText = btn.find('.btn-text');
-        const loading = btn.find('.loading');
-        
-        btn.prop('disabled', true);
-        btnText.hide();
-        loading.show();
-        
-        // Simular pequeña demora para UX
-        setTimeout(() => {
-          $(this)[0].submit();
-        }, 300);
-      });
-      
-      // Auto-hide alerts después de 5 segundos
-      setTimeout(function() {
-        $('.alert').fadeOut('slow');
-      }, 5000);
-      
-      // Efecto focus en inputs
-      $('.form-control').on('focus', function() {
-        $(this).parent().find('.input-group-text i').addClass('text-primary');
-      }).on('blur', function() {
-        $(this).parent().find('.input-group-text i').removeClass('text-primary');
-      });
-      
-      // Validación básica del frontend
-      $('#loginForm').on('submit', function(e) {
-        const username = $('input[name="username"]').val().trim();
-        const password = $('input[name="password"]').val().trim();
-        
-        if (!username || !password) {
-          e.preventDefault();
-          
-          // Mostrar alerta
-          const alertHtml = `
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-              <i class="fas fa-exclamation-triangle mr-2"></i>
-              Por favor complete todos los campos
-              <button type="button" class="close" data-dismiss="alert">
-                <span>&times;</span>
-              </button>
-            </div>
-          `;
-          
-          $('.login-card-body h4').after(alertHtml);
-          
-          // Reset botón
-          const btn = $('#loginBtn');
-          btn.prop('disabled', false);
-          btn.find('.btn-text').show();
-          btn.find('.loading').hide();
-          
-          return false;
-        }
-      });
-    });
-  </script>
+  {% load static %}
 </body>
 </html>
