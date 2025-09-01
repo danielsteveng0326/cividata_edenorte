@@ -165,10 +165,10 @@
                                 data-toggle="collapse" 
                                 data-target="#objeto{{ forloop.counter }}" 
                                 aria-expanded="false">
-                          <span class="font-weight-bold">{{ contrato.nom_raz_social_contratista|truncatechars:30 }}</span>
+                          <span class="font-weight-bold">{{ contrato.ombre_de_la_entidad|truncatechars:30 }}</span>
                           {% if contrato.documento_proveedor %}
                             <br>
-                            <small class="text-muted">{{ contrato.tipo_documento_proveedor|default:"Doc" }}: {{ contrato.documento_proveedor }}</small>
+                            <small class="text-muted">{{ contrato.tipo_documento_proveedor|default:"Doc" }}: {{ contrato.nit_de_la_entidad }}</small>
                           {% endif %}
                           <i class="fas fa-chevron-down ml-2 toggle-icon"></i>
                         </button>
