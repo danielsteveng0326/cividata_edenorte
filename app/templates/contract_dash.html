@@ -249,6 +249,49 @@ document.addEventListener('DOMContentLoaded', function() {
     departamentos: departamentos_labels.length
   });
 
+  // ===============================
+  // PALETA DE COLORES INSTITUCIONAL
+  // ===============================
+  
+  // Paleta principal: Azules institucionales
+  const institutionalBlue = {
+    primary: '#1e3a8a',      // Azul institucional principal
+    secondary: '#3b82f6',     // Azul medio
+    light: '#60a5fa',        // Azul claro
+    dark: '#1e40af',         // Azul oscuro
+    accent: '#2563eb'        // Azul de acento
+  };
+  
+  // Paleta secundaria: Grises corporativos
+  const corporateGray = {
+    primary: '#374151',      // Gris principal
+    secondary: '#6b7280',    // Gris medio
+    light: '#9ca3af',       // Gris claro
+    dark: '#1f2937',        // Gris oscuro
+    accent: '#4b5563'       // Gris de acento
+  };
+  
+  // Paleta extendida para múltiples elementos
+  const professionalPalette = [
+    '#1e3a8a', '#3b82f6', '#60a5fa', '#2563eb', '#1d4ed8',
+    '#374151', '#6b7280', '#4b5563', '#9ca3af', '#d1d5db',
+    '#0f172a', '#475569', '#64748b', '#94a3b8', '#cbd5e1'
+  ];
+  
+  // Paleta con transparencia para backgrounds
+  const transparentPalette = [
+    'rgba(30, 58, 138, 0.8)',   // Azul institucional
+    'rgba(59, 130, 246, 0.8)',  // Azul medio  
+    'rgba(96, 165, 250, 0.8)',  // Azul claro
+    'rgba(37, 99, 235, 0.8)',   // Azul de acento
+    'rgba(29, 78, 216, 0.8)',   // Azul intenso
+    'rgba(55, 65, 81, 0.8)',    // Gris principal
+    'rgba(107, 114, 128, 0.8)', // Gris medio
+    'rgba(75, 85, 99, 0.8)',    // Gris de acento
+    'rgba(156, 163, 175, 0.8)', // Gris claro
+    'rgba(209, 213, 219, 0.8)'  // Gris muy claro
+  ];
+
   // Diccionario para traducir meses
   const mesesEspanol = {
     'January': 'Enero', 'February': 'Febrero', 'March': 'Marzo',
@@ -263,18 +306,33 @@ document.addEventListener('DOMContentLoaded', function() {
     return mesesEspanol[mes] || mes;
   }
 
-  // Configuración común para todos los gráficos
+  // Configuración común mejorada para todos los gráficos
   const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top'
+        position: 'top',
+        labels: {
+          font: {
+            family: 'Arial, sans-serif',
+            size: 12
+          },
+          color: corporateGray.dark,
+          usePointStyle: true,
+          padding: 20
+        }
+      }
+    },
+    elements: {
+      bar: {
+        borderRadius: 4,
+        borderSkipped: false,
       }
     }
   };
 
-  // 1. Gráfico de contratos por mes
+  // 1. GRÁFICO DE CONTRATOS POR MES - Estilo Institucional
   try {
     const ctxCount = document.getElementById('stackedBarChart').getContext('2d');
     new Chart(ctxCount, {
@@ -284,9 +342,11 @@ document.addEventListener('DOMContentLoaded', function() {
         datasets: [{
           label: 'Contratos 2025',
           data: data,
-          backgroundColor: 'rgba(54, 162, 235, 0.8)',
-          borderColor: 'rgb(54, 162, 235)',
-          borderWidth: 1
+          backgroundColor: institutionalBlue.primary,
+          borderColor: institutionalBlue.dark,
+          borderWidth: 1,
+          hoverBackgroundColor: institutionalBlue.secondary,
+          hoverBorderColor: institutionalBlue.accent
         }]
       },
       options: {
@@ -294,17 +354,39 @@ document.addEventListener('DOMContentLoaded', function() {
         scales: {
           y: {
             beginAtZero: true,
-            ticks: { stepSize: 10 }
+            ticks: { 
+              stepSize: 10,
+              font: { size: 11 },
+              color: corporateGray.secondary
+            },
+            grid: {
+              color: 'rgba(156, 163, 175, 0.3)',
+              drawBorder: false
+            }
           },
           x: {
-            ticks: { maxRotation: 45, minRotation: 45 }
+            ticks: { 
+              maxRotation: 45, 
+              minRotation: 45,
+              font: { size: 11 },
+              color: corporateGray.secondary
+            },
+            grid: {
+              display: false
+            }
           }
         },
         plugins: {
           ...commonOptions.plugins,
           title: {
             display: true,
-            text: 'Contratos por Mes - Año 2025'
+            text: 'Contratos por Mes - Año 2025',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            color: corporateGray.dark,
+            padding: 20
           }
         }
       }
@@ -314,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('❌ Error creando gráfico de contratos:', error);
   }
 
-  // 2. Gráfico de valor por mes
+  // 2. GRÁFICO DE VALOR POR MES - Estilo Corporativo
   try {
     const ctxValue = document.getElementById('valueBarChart').getContext('2d');
     new Chart(ctxValue, {
@@ -324,9 +406,11 @@ document.addEventListener('DOMContentLoaded', function() {
         datasets: [{
           label: 'Valor Contratado (Millones)',
           data: data2,
-          backgroundColor: 'rgba(75, 192, 192, 0.8)',
-          borderColor: 'rgb(75, 192, 192)',
-          borderWidth: 1
+          backgroundColor: institutionalBlue.secondary,
+          borderColor: institutionalBlue.primary,
+          borderWidth: 1,
+          hoverBackgroundColor: institutionalBlue.light,
+          hoverBorderColor: institutionalBlue.accent
         }]
       },
       options: {
@@ -337,18 +421,38 @@ document.addEventListener('DOMContentLoaded', function() {
             ticks: {
               callback: function(value) {
                 return '$ ' + value.toLocaleString('es-CO') + ' M';
-              }
+              },
+              font: { size: 11 },
+              color: corporateGray.secondary
+            },
+            grid: {
+              color: 'rgba(156, 163, 175, 0.3)',
+              drawBorder: false
             }
           },
           x: {
-            ticks: { maxRotation: 45, minRotation: 45 }
+            ticks: { 
+              maxRotation: 45, 
+              minRotation: 45,
+              font: { size: 11 },
+              color: corporateGray.secondary
+            },
+            grid: {
+              display: false
+            }
           }
         },
         plugins: {
           ...commonOptions.plugins,
           title: {
             display: true,
-            text: 'Valor Total Contratado por Mes - Año 2025'
+            text: 'Valor Total Contratado por Mes - Año 2025',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            color: corporateGray.dark,
+            padding: 20
           },
           tooltip: {
             callbacks: {
@@ -356,7 +460,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 let value = context.raw;
                 return `$ ${value.toLocaleString('es-CO')} millones`;
               }
-            }
+            },
+            backgroundColor: 'rgba(30, 58, 138, 0.9)',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: institutionalBlue.accent,
+            borderWidth: 1
           }
         }
       }
@@ -366,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('❌ Error creando gráfico de valor:', error);
   }
 
-  // 3. Gráfico de modalidades (dona)
+  // 3. GRÁFICO DE MODALIDADES - Estilo Elegante
   try {
     const ctxModalidades = document.getElementById('modalidadesChart').getContext('2d');
     new Chart(ctxModalidades, {
@@ -376,27 +485,52 @@ document.addEventListener('DOMContentLoaded', function() {
         datasets: [{
           data: modalidades_data,
           backgroundColor: [
-            '#007bff', '#0056b3', '#003d82', 
-            '#002952', '#001a3a', '#001122'
+            institutionalBlue.primary,   // Azul institucional principal
+            institutionalBlue.secondary, // Azul medio
+            institutionalBlue.light,     // Azul claro
+            corporateGray.primary,       // Gris principal
+            corporateGray.secondary,     // Gris medio
+            institutionalBlue.dark       // Azul oscuro
           ],
-          borderWidth: 2,
-          borderColor: '#fff'
+          borderWidth: 3,
+          borderColor: '#ffffff',
+          hoverBorderWidth: 4,
+          hoverBorderColor: '#ffffff'
         }]
       },
       options: {
         ...commonOptions,
+        cutout: '60%', // Hace el donut más elegante
         plugins: {
-          ...commonOptions.plugins,
           legend: {
             position: 'bottom',
             labels: {
               padding: 20,
-              usePointStyle: true
+              usePointStyle: true,
+              font: {
+                size: 12,
+                family: 'Arial, sans-serif'
+              },
+              color: corporateGray.dark,
+              generateLabels: function(chart) {
+                const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                const labels = original.call(this, chart);
+                labels.forEach(label => {
+                  label.pointStyle = 'circle';
+                });
+                return labels;
+              }
             }
           },
           title: {
             display: true,
-            text: 'Distribución por Modalidad'
+            text: 'Distribución por Modalidad',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            color: corporateGray.dark,
+            padding: 20
           },
           tooltip: {
             callbacks: {
@@ -405,7 +539,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const percentage = ((context.raw / total) * 100).toFixed(1);
                 return context.label + ': ' + context.raw + ' (' + percentage + '%)';
               }
-            }
+            },
+            backgroundColor: 'rgba(30, 58, 138, 0.9)',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: institutionalBlue.accent,
+            borderWidth: 1
           }
         }
       }
@@ -415,9 +554,21 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('❌ Error creando gráfico de modalidades:', error);
   }
 
-  // 4. Gráfico de tipos de contrato
+  // 4. GRÁFICO DE TIPOS DE CONTRATO - Paleta Profesional
   try {
     const ctxTipos = document.getElementById('tiposChart').getContext('2d');
+    
+    // Generar colores graduales para los tipos
+    const tiposColors = tipos_labels.map((_, index) => {
+      const intensity = 0.8 - (index * 0.1); // Degradado de intensidad
+      return `rgba(30, 58, 138, ${Math.max(intensity, 0.3)})`;
+    });
+    
+    const tiposBorderColors = tipos_labels.map((_, index) => {
+      const intensity = 1.0 - (index * 0.1);
+      return `rgba(30, 58, 138, ${Math.max(intensity, 0.5)})`;
+    });
+
     new Chart(ctxTipos, {
       type: 'bar',
       data: {
@@ -425,17 +576,11 @@ document.addEventListener('DOMContentLoaded', function() {
         datasets: [{
           label: 'Cantidad de Contratos',
           data: tipos_data,
-          backgroundColor: [
-            '#fd7e14', '#e8590c', '#d44100', 
-            '#bf3900', '#aa3200', '#952b00',
-            '#7d1f00', '#681800', '#531200'
-          ],
-          borderColor: [
-            '#fd7e14', '#e8590c', '#d44100', 
-            '#bf3900', '#aa3200', '#952b00',
-            '#7d1f00', '#681800', '#531200'
-          ],
-          borderWidth: 1
+          backgroundColor: tiposColors,
+          borderColor: tiposBorderColors,
+          borderWidth: 1,
+          hoverBackgroundColor: tipos_labels.map(() => institutionalBlue.secondary),
+          hoverBorderColor: tipos_labels.map(() => institutionalBlue.accent)
         }]
       },
       options: {
@@ -443,17 +588,46 @@ document.addEventListener('DOMContentLoaded', function() {
         scales: {
           y: {
             beginAtZero: true,
-            ticks: { stepSize: 1 }
+            ticks: { 
+              stepSize: 1,
+              font: { size: 11 },
+              color: corporateGray.secondary
+            },
+            grid: {
+              color: 'rgba(156, 163, 175, 0.3)',
+              drawBorder: false
+            }
           },
           x: {
-            ticks: { maxRotation: 45, minRotation: 45 }
+            ticks: { 
+              maxRotation: 45, 
+              minRotation: 45,
+              font: { size: 10 },
+              color: corporateGray.secondary
+            },
+            grid: {
+              display: false
+            }
           }
         },
         plugins: {
           legend: { display: false },
           title: {
             display: true,
-            text: 'Distribución por Tipo de Contrato'
+            text: 'Distribución por Tipo de Contrato',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            color: corporateGray.dark,
+            padding: 20
+          },
+          tooltip: {
+            backgroundColor: 'rgba(30, 58, 138, 0.9)',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: institutionalBlue.accent,
+            borderWidth: 1
           }
         }
       }
@@ -463,36 +637,50 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('❌ Error creando gráfico de tipos:', error);
   }
 
-  // 5. Gráfico de departamentos (polar)
+  // 5. GRÁFICO DE DEPARTAMENTOS - Estilo Polar Elegante
   try {
     const ctxDepartamentos = document.getElementById('departamentosChart').getContext('2d');
+    
+    // Paleta de colores institucional para departamentos
+    const departmentColors = departamentos_labels.map((_, index) => {
+      const colors = [
+        'rgba(30, 58, 138, 0.7)',   // Azul institucional
+        'rgba(59, 130, 246, 0.7)',  // Azul medio
+        'rgba(96, 165, 250, 0.7)',  // Azul claro
+        'rgba(55, 65, 81, 0.7)',    // Gris principal
+        'rgba(107, 114, 128, 0.7)', // Gris medio
+        'rgba(75, 85, 99, 0.7)',    // Gris de acento
+        'rgba(37, 99, 235, 0.7)',   // Azul de acento
+        'rgba(29, 78, 216, 0.7)'    // Azul intenso
+      ];
+      return colors[index % colors.length];
+    });
+    
+    const departmentBorderColors = departamentos_labels.map((_, index) => {
+      const colors = [
+        'rgb(30, 58, 138)',   // Azul institucional
+        'rgb(59, 130, 246)',  // Azul medio
+        'rgb(96, 165, 250)',  // Azul claro
+        'rgb(55, 65, 81)',    // Gris principal
+        'rgb(107, 114, 128)', // Gris medio
+        'rgb(75, 85, 99)',    // Gris de acento
+        'rgb(37, 99, 235)',   // Azul de acento
+        'rgb(29, 78, 216)'    // Azul intenso
+      ];
+      return colors[index % colors.length];
+    });
+
     new Chart(ctxDepartamentos, {
       type: 'polarArea',
       data: {
         labels: departamentos_labels,
         datasets: [{
           data: departamentos_data,
-          backgroundColor: [
-            'rgba(255, 99, 132, 0.7)',
-            'rgba(54, 162, 235, 0.7)',
-            'rgba(255, 205, 86, 0.7)',
-            'rgba(75, 192, 192, 0.7)',
-            'rgba(153, 102, 255, 0.7)',
-            'rgba(255, 159, 64, 0.7)',
-            'rgba(199, 199, 199, 0.7)',
-            'rgba(83, 102, 255, 0.7)'
-          ],
-          borderColor: [
-            'rgb(255, 99, 132)',
-            'rgb(54, 162, 235)',
-            'rgb(255, 205, 86)',
-            'rgb(75, 192, 192)',
-            'rgb(153, 102, 255)',
-            'rgb(255, 159, 64)',
-            'rgb(199, 199, 199)',
-            'rgb(83, 102, 255)'
-          ],
-          borderWidth: 2
+          backgroundColor: departmentColors,
+          borderColor: departmentBorderColors,
+          borderWidth: 2,
+          hoverBackgroundColor: departamentos_labels.map(() => 'rgba(30, 58, 138, 0.9)'),
+          hoverBorderColor: departamentos_labels.map(() => institutionalBlue.accent)
         }]
       },
       options: {
@@ -500,14 +688,49 @@ document.addEventListener('DOMContentLoaded', function() {
         scales: {
           r: {
             beginAtZero: true,
-            ticks: { stepSize: 5 }
+            ticks: { 
+              stepSize: 5,
+              font: { size: 10 },
+              color: corporateGray.secondary,
+              backdropColor: 'rgba(255, 255, 255, 0.8)'
+            },
+            grid: {
+              color: 'rgba(107, 114, 128, 0.3)'
+            },
+            angleLines: {
+              color: 'rgba(107, 114, 128, 0.3)'
+            }
           }
         },
         plugins: {
-          ...commonOptions.plugins,
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              usePointStyle: true,
+              font: {
+                size: 11,
+                family: 'Arial, sans-serif'
+              },
+              color: corporateGray.dark
+            }
+          },
           title: {
             display: true,
-            text: 'Contratos por Departamento/Secretaría'
+            text: 'Contratos por Departamento/Secretaría',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            color: corporateGray.dark,
+            padding: 20
+          },
+          tooltip: {
+            backgroundColor: 'rgba(30, 58, 138, 0.9)',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: institutionalBlue.accent,
+            borderWidth: 1
           }
         }
       }
@@ -517,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('❌ Error creando gráfico de departamentos:', error);
   }
 
-  console.log('🎉 Todos los gráficos han sido procesados');
+  console.log('🎉 Todos los gráficos han sido procesados con paleta institucional');
 });
 </script>
 {% endblock %}
