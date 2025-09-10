@@ -1,284 +1,321 @@
-<!-- templates/proveedor/detalle.html -->
 {% extends 'base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<style>
+.alert-proveedor-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-proveedor-error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.auto-hide-alert {
+    animation: fadeOut 5s forwards;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; display: none; }
+}
+
+.proveedor-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.badge-status {
+    font-size: 0.9em;
+    padding: 8px 12px;
+}
+</style>
+{% endblock %}
+
 {% block title %}Detalle del Proveedor{% endblock %}
 
-{% block content %}
-<div class="content-wrapper">
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">
-                        <i class="fas fa-eye"></i> Detalle del Proveedor
-                    </h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard' %}">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Proveedores</a></li>
-                        <li class="breadcrumb-item active">Detalle</li>
-                    </ol>
-                </div>
+{% block content_header %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1><i class="fas fa-user-tie"></i> Detalle del Proveedor</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Proveedores</a></li>
+                    <li class="breadcrumb-item active">Detalle</li>
+                </ol>
             </div>
         </div>
     </div>
-
-    <section class="content">
-        <div class="container-fluid">
-            
-            <!-- Información Principal -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-building"></i> {{ proveedor.nombre }}
-                    </h3>
-                    <div class="card-tools">
-                        {% if proveedor.es_activo %}
-                            <span class="badge badge-success">Activo</span>
-                        {% else %}
-                            <span class="badge badge-secondary">Inactivo</span>
-                        {% endif %}
-                        {% if proveedor.es_pyme %}
-                            <span class="badge badge-warning">PyME</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td><strong>NIT:</strong></td>
-                                    <td>{{ proveedor.nit }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Código:</strong></td>
-                                    <td>{{ proveedor.codigo|default:"No asignado" }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Teléfono:</strong></td>
-                                    <td>{{ proveedor.telefono|default:"No registrado" }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Correo:</strong></td>
-                                    <td>{{ proveedor.correo|default:"No registrado" }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Sitio Web:</strong></td>
-                                    <td>
-                                        {% if proveedor.sitio_web %}
-                                            <a href="{{ proveedor.sitio_web }}" target="_blank">{{ proveedor.sitio_web }}</a>
-                                        {% else %}
-                                            No registrado
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td><strong>Tipo de Empresa:</strong></td>
-                                    <td>{{ proveedor.tipo_empresa }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>País:</strong></td>
-                                    <td>{{ proveedor.pais|default:"No registrado" }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Departamento:</strong></td>
-                                    <td>{{ proveedor.departamento|default:"No registrado" }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Municipio:</strong></td>
-                                    <td>{{ proveedor.municipio|default:"No registrado" }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Fecha de Registro:</strong></td>
-                                    <td>{{ proveedor.fecha_registro|date:"d/m/Y H:i" }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    {% if proveedor.direccion %}
-                    <div class="row">
-                        <div class="col-12">
-                            <strong>Dirección:</strong> {{ proveedor.direccion }}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="card-footer">
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editModal">
-                        <i class="fas fa-edit"></i> Editar Información
-                    </button>
-                    <a href="{% url 'proveedor:listar' %}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Volver a Lista
-                    </a>
-                </div>
-            </div>
-
-            <!-- Representante Legal (si aplica) -->
-            {% if necesita_rep_legal %}
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-user-tie"></i> Representante Legal
-                    </h3>
-                </div>
-                <div class="card-body">
-                    {% if proveedor.nombre_representante_legal %}
-                    <div class="row">
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td><strong>Nombre:</strong></td>
-                                    <td>{{ proveedor.nombre_representante_legal }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Tipo de Documento:</strong></td>
-                                    <td>{{ proveedor.tipo_doc_representante_legal|default:"No registrado" }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Número de Documento:</strong></td>
-                                    <td>{{ proveedor.n_mero_doc_representante_legal|default:"No registrado" }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td><strong>Teléfono:</strong></td>
-                                    <td>{{ proveedor.telefono_representante_legal|default:"No registrado" }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Correo:</strong></td>
-                                    <td>{{ proveedor.correo_representante_legal|default:"No registrado" }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p class="text-muted">No hay información del representante legal registrada.</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Información Adicional -->
-            {% if proveedor.descripcion_categoria_principal or proveedor.camaras_comercio %}
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-info-circle"></i> Información Adicional
-                    </h3>
-                </div>
-                <div class="card-body">
-                    {% if proveedor.descripcion_categoria_principal %}
-                    <div class="mb-3">
-                        <strong>Categoría Principal:</strong>
-                        <p>{{ proveedor.descripcion_categoria_principal }}</p>
-                    </div>
-                    {% endif %}
-                    
-                    {% if proveedor.camaras_comercio %}
-                    <div class="mb-3">
-                        <strong>Cámaras de Comercio:</strong>
-                        <p>{{ proveedor.camaras_comercio }}</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-        </div>
-    </section>
 </div>
+{% endblock %}
 
-<!-- Modal de Edición -->
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-edit"></i> Editar Proveedor
-                </h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+{% block content %}
+
+<!-- Mensajes de notificación mejorados -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} auto-hide-alert" role="alert">
+            <div class="d-flex align-items-center">
+                {% if 'success' in message.tags %}
+                    <i class="fas fa-check-circle fa-2x mr-3 text-success"></i>
+                {% elif 'error' in message.tags %}
+                    <i class="fas fa-exclamation-triangle fa-2x mr-3 text-danger"></i>
+                {% elif 'warning' in message.tags %}
+                    <i class="fas fa-exclamation-circle fa-2x mr-3 text-warning"></i>
+                {% else %}
+                    <i class="fas fa-info-circle fa-2x mr-3 text-info"></i>
+                {% endif %}
+                <div>
+                    <h5 class="mb-1">
+                        {% if 'success' in message.tags %}¡Éxito!
+                        {% elif 'error' in message.tags %}Error
+                        {% elif 'warning' in message.tags %}Advertencia
+                        {% else %}Información
+                        {% endif %}
+                    </h5>
+                    <p class="mb-0">{{ message }}</p>
+                </div>
             </div>
-            <form method="POST">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Información básica del proveedor -->
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-building"></i> Información Básica
+                </h3>
+                <div class="card-tools">
+                    <span class="badge badge-success badge-status">
+                        {{ proveedor.activo|yesno:"Activo,Inactivo" }}
+                    </span>
+                </div>
+            </div>
+            
+            <form method="post">
                 {% csrf_token %}
-                <div class="modal-body">
+                <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="edit_nombre">Nombre / Razón Social</label>
+                                <label for="nombre">Nombre/Razón Social *</label>
                                 <input type="text" 
-                                       id="edit_nombre" 
-                                       name="nombre" 
                                        class="form-control" 
-                                       value="{{ proveedor.nombre }}">
+                                       id="nombre" 
+                                       name="nombre" 
+                                       value="{{ proveedor.nombre }}" 
+                                       required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="edit_telefono">Teléfono</label>
+                                <label for="nit">NIT</label>
                                 <input type="text" 
-                                       id="edit_telefono" 
-                                       name="telefono" 
                                        class="form-control" 
+                                       id="nit" 
+                                       value="{{ proveedor.nit }}" 
+                                       disabled>
+                                <small class="form-text text-muted">El NIT no se puede modificar</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="telefono">Teléfono</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="telefono" 
+                                       name="telefono" 
                                        value="{{ proveedor.telefono }}">
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="edit_correo">Correo Electrónico</label>
+                                <label for="correo">Correo Electrónico</label>
                                 <input type="email" 
-                                       id="edit_correo" 
-                                       name="correo" 
                                        class="form-control" 
+                                       id="correo" 
+                                       name="correo" 
                                        value="{{ proveedor.correo }}">
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="edit_tipo_empresa">Tipo de Empresa</label>
-                                <select id="edit_tipo_empresa" name="tipo_empresa" class="form-control">
-                                    <option value="PERSONA NATURAL COLOMBIANA" {% if proveedor.tipo_empresa == "PERSONA NATURAL COLOMBIANA" %}selected{% endif %}>Persona Natural Colombiana</option>
-                                    <option value="EMPRESA" {% if proveedor.tipo_empresa == "EMPRESA" %}selected{% endif %}>Empresa</option>
-                                </select>
-                            </div>
-                        </div>
                     </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="form-group">
-                                <label for="edit_direccion">Dirección</label>
-                                <input type="text" 
-                                       id="edit_direccion" 
-                                       name="direccion" 
-                                       class="form-control" 
-                                       value="{{ proveedor.direccion }}">
-                            </div>
-                        </div>
+                    
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <textarea class="form-control" 
+                                  id="direccion" 
+                                  name="direccion" 
+                                  rows="2">{{ proveedor.direccion }}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tipo_empresa">Tipo de Empresa</label>
+                        <select class="form-control" id="tipo_empresa" name="tipo_empresa">
+                            <option value="">Seleccionar...</option>
+                            <option value="Persona Natural Colombiana" {% if proveedor.tipo_empresa == "Persona Natural Colombiana" %}selected{% endif %}>Persona Natural Colombiana</option>
+                            <option value="Persona Natural Extranjera" {% if proveedor.tipo_empresa == "Persona Natural Extranjera" %}selected{% endif %}>Persona Natural Extranjera</option>
+                            <option value="Persona Jurídica Nacional Privada" {% if proveedor.tipo_empresa == "Persona Jurídica Nacional Privada" %}selected{% endif %}>Persona Jurídica Nacional Privada</option>
+                            <option value="Persona Jurídica Extranjera" {% if proveedor.tipo_empresa == "Persona Jurídica Extranjera" %}selected{% endif %}>Persona Jurídica Extranjera</option>
+                            <option value="Persona Jurídica Nacional Pública" {% if proveedor.tipo_empresa == "Persona Jurídica Nacional Pública" %}selected{% endif %}>Persona Jurídica Nacional Pública</option>
+                        </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        Cancelar
-                    </button>
+                
+                {% if proveedor.necesita_representante_legal %}
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-user-tie"></i> Representante Legal
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombre_representante_legal">Nombre Representante Legal</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="nombre_representante_legal" 
+                                       name="nombre_representante_legal" 
+                                       value="{{ proveedor.nombre_representante_legal }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="telefono_representante_legal">Teléfono Rep. Legal</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="telefono_representante_legal" 
+                                       name="telefono_representante_legal" 
+                                       value="{{ proveedor.telefono_representante_legal }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="correo_representante_legal">Correo Rep. Legal</label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="correo_representante_legal" 
+                               name="correo_representante_legal" 
+                               value="{{ proveedor.correo_representante_legal }}">
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="card-footer">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Guardar Cambios
+                        <i class="fas fa-save"></i> Actualizar Información
                     </button>
+                    <a href="{% url 'proveedor:listar' %}" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> Volver a Lista
+                    </a>
+                    <a href="{% url 'proveedor:index' %}" class="btn btn-info">
+                        <i class="fas fa-search"></i> Nueva Consulta
+                    </a>
                 </div>
             </form>
         </div>
     </div>
+    
+    <!-- Sidebar con información adicional -->
+    <div class="col-md-4">
+        <div class="card card-info">
+            <div class="card-header">
+                <h3 class="card-title">Información del Sistema</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>ID:</strong> {{ proveedor.id }}</p>
+                <p><strong>Fecha Registro:</strong> {{ proveedor.fecha_registro|date:"d/m/Y H:i" }}</p>
+                <p><strong>Estado:</strong> 
+                    <span class="badge {% if proveedor.activo == 'true' %}badge-success{% else %}badge-danger{% endif %}">
+                        {{ proveedor.activo|yesno:"Activo,Inactivo" }}
+                    </span>
+                </p>
+                
+                {% if proveedor.es_pyme == 'true' %}
+                <p><strong>Clasificación:</strong> 
+                    <span class="badge badge-warning">PyME</span>
+                </p>
+                {% endif %}
+                
+                {% if proveedor.ubicacion %}
+                <p><strong>Ubicación:</strong> {{ proveedor.ubicacion }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card card-warning">
+            <div class="card-header">
+                <h3 class="card-title">Acciones</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'proveedor:registrar' %}" class="btn btn-success btn-block">
+                        <i class="fas fa-plus"></i> Registrar Nuevo
+                    </a>
+                    <a href="{% url 'proveedor:listar' %}" class="btn btn-info btn-block">
+                        <i class="fas fa-list"></i> Ver Todos
+                    </a>
+                    <a href="{% url 'proveedor:index' %}" class="btn btn-primary btn-block">
+                        <i class="fas fa-search"></i> Buscar por NIT
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-ocultar alertas después de 5 segundos
+    setTimeout(function() {
+        $('.auto-hide-alert').fadeOut('slow');
+    }, 5000);
+    
+    // Validación de formulario
+    $('form').on('submit', function(e) {
+        var nombre = $('#nombre').val().trim();
+        
+        if (!nombre) {
+            e.preventDefault();
+            alert('El nombre es requerido');
+            $('#nombre').focus();
+            return false;
+        }
+    });
+    
+    console.log('Página de detalle de proveedor cargada');
+});
+</script>
 {% endblock %}

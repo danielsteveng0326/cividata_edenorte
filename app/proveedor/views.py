@@ -75,7 +75,7 @@ def consultar_nit(request):
         
         # Primero buscar en la base de datos local
         try:
-            proveedor_local = Proveedor.objects.get(nit=nit)
+            proveedor_local = Proveedor.objects.get(nit=nit, activo='true')
             print(f"✅ Proveedor encontrado en BD local: {proveedor_local.nombre}")
             
             html_content = f"""
@@ -88,21 +88,14 @@ def consultar_nit(request):
                     <p><strong>Dirección:</strong> {proveedor_local.direccion or 'No registrada'}</p>
                 </div>
                 <div class="col-md-6">
-                    <p><strong>Municipio:</strong> {proveedor_local.municipio or 'No registrado'}</p>
-                    <p><strong>Departamento:</strong> {proveedor_local.departamento or 'No registrado'}</p>
-                    <p><strong>Tipo:</strong> {proveedor_local.tipo_empresa}</p>
-                    <p><strong>Es PyME:</strong> {'Sí' if proveedor_local.es_pyme else 'No'}</p>
-                    <p><strong>Estado:</strong> {'Activo' if proveedor_local.es_activo else 'Inactivo'}</p>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <a href="/proveedor/detalle/{proveedor_local.id}/" class="btn btn-primary">
-                        <i class="fas fa-eye"></i> Ver Detalles
-                    </a>
-                    <small class="text-muted ml-3">
-                        <i class="fas fa-database"></i> Información desde base de datos local
-                    </small>
+                    <p><strong>Tipo:</strong> {proveedor_local.tipo_empresa or 'No especificado'}</p>
+                    <p><strong>Estado:</strong> <span class="badge badge-success">Activo</span></p>
+                    <p><strong>Fecha Registro:</strong> {proveedor_local.fecha_registro.strftime('%d/%m/%Y') if proveedor_local.fecha_registro else 'N/A'}</p>
+                    <div class="mt-3">
+                        <a href="/proveedor/detalle/{proveedor_local.id}/" class="btn btn-info btn-sm">
+                            <i class="fas fa-eye"></i> Ver Detalles
+                        </a>
+                    </div>
                 </div>
             </div>
             """
@@ -144,19 +137,13 @@ def consultar_nit(request):
                             <p><strong>Dirección:</strong> {proveedor_data.get('direccion', 'No registrada')}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Municipio:</strong> {proveedor_data.get('municipio', 'No registrado')}</p>
-                            <p><strong>Departamento:</strong> {proveedor_data.get('departamento', 'No registrado')}</p>
                             <p><strong>Tipo:</strong> {proveedor_data.get('tipo_empresa', 'No especificado')}</p>
+                            <p><strong>Estado:</strong> <span class="badge badge-success">Encontrado en API</span></p>
                             <p><strong>Es PyME:</strong> {'Sí' if proveedor_data.get('espyme') == 'true' else 'No'}</p>
-                            <p><strong>Estado:</strong> {'Activo' if proveedor_data.get('esta_activa') == 'true' else 'Inactivo'}</p>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <small class="text-muted">
-                                <i class="fas fa-cloud"></i> Información obtenida desde API de datos.gov.co
-                                {f'y {accion.lower()} en base de datos local' if proveedor_obj else ''}
-                            </small>
+                            <div class="mt-3">
+                                <span class="badge badge-info">Consultado desde API RUP</span>
+                                {f'<br><a href="/proveedor/detalle/{proveedor_obj.id}/" class="btn btn-info btn-sm mt-2"><i class="fas fa-eye"></i> Ver Detalles</a>' if proveedor_obj else ''}
+                            </div>
                         </div>
                     </div>
                     """
@@ -168,15 +155,36 @@ def consultar_nit(request):
                     })
                     
                 except Exception as e:
-                    print(f"⚠️ Error guardando en BD local: {str(e)}")
-                    # Continuar con mostrar datos aunque no se guarde
-                    pass
-            
+                    print(f"⚠️ Error guardando proveedor de API: {str(e)}")
+                    # Aún así devolver los datos de la API
+                    html_content = f"""
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5><i class="fas fa-building"></i> {proveedor_data.get('nombre', 'N/A')}</h5>
+                            <p><strong>NIT:</strong> {proveedor_data.get('nit', 'N/A')}</p>
+                            <p><strong>Información:</strong> Encontrado en API pero no pudo guardarse en BD local</p>
+                            <p><strong>Error:</strong> {str(e)}</p>
+                        </div>
+                    </div>
+                    """
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'html': html_content,
+                        'source': 'api',
+                        'warning': f'Datos obtenidos pero no guardados: {str(e)}'
+                    })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No se encontraron datos en la respuesta de la API'
+                })
+        
         elif resultado_api['status'] == 'no_data':
-            print("⚠️ Proveedor no encontrado en API")
+            print(f"ℹ️ Proveedor no encontrado en la API")
             return JsonResponse({
                 'success': False,
-                'message': f'El proveedor con NIT {nit} no fue encontrado en la base de datos de proveedores del Estado.'
+                'message': 'Proveedor no encontrado en RUP (Registro Único de Proveedores)'
             })
         
         else:
@@ -266,6 +274,12 @@ def registrar_proveedor(request):
             telefono = request.POST.get('telefono', '').strip()
             correo = request.POST.get('correo', '').strip()
             direccion = request.POST.get('direccion', '').strip()
+            tipo_empresa = request.POST.get('tipo_empresa', '').strip()
+            
+            # Datos de representante legal (opcional)
+            nombre_rep_legal = request.POST.get('nombre_representante_legal', '').strip()
+            telefono_rep_legal = request.POST.get('telefono_representante_legal', '').strip()
+            correo_rep_legal = request.POST.get('correo_representante_legal', '').strip()
             
             # Validaciones básicas
             if not nombre or not nit:
@@ -285,22 +299,64 @@ def registrar_proveedor(request):
                 telefono=telefono,
                 correo=correo,
                 direccion=direccion,
+                tipo_empresa=tipo_empresa,
+                nombre_representante_legal=nombre_rep_legal,
+                telefono_representante_legal=telefono_rep_legal,
+                correo_representante_legal=correo_rep_legal,
                 activo='true'
             )
             
             print(f"✅ Proveedor registrado exitosamente: {proveedor.nit}")
-            messages.success(request, f'Proveedor {nombre} registrado exitosamente')
+            
+            # SOLUCIÓN AL PROBLEMA: Usar mensajes con diferentes tipos
+            messages.success(
+                request, 
+                f'✅ Proveedor "{nombre}" registrado exitosamente con NIT {nit}',
+                extra_tags='proveedor-success'
+            )
+            
+            # Si es una solicitud AJAX (opcional para futuras mejoras)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Proveedor {nombre} registrado exitosamente',
+                    'proveedor_id': proveedor.id,
+                    'redirect_url': f'/proveedor/detalle/{proveedor.id}/'
+                })
+            
+            # Redirigir con mensaje de éxito
             return redirect('proveedor:detalle', proveedor_id=proveedor.id)
             
         except ValidationError as e:
             print(f"❌ Error de validación: {str(e)}")
-            messages.error(request, str(e))
+            messages.error(request, str(e), extra_tags='proveedor-error')
+            
+            # Mantener los datos del formulario en caso de error
+            context = {
+                'form_data': request.POST,
+                'error': str(e)
+            }
+            return render(request, 'proveedor/registrar.html', context)
+            
         except Exception as e:
             print(f"❌ Error registrando proveedor: {str(e)}")
             import traceback
             traceback.print_exc()
-            messages.error(request, f'Error al registrar: {str(e)}')
+            
+            messages.error(
+                request, 
+                f'Error al registrar: {str(e)}',
+                extra_tags='proveedor-error'
+            )
+            
+            # Mantener los datos del formulario en caso de error
+            context = {
+                'form_data': request.POST,
+                'error': str(e)
+            }
+            return render(request, 'proveedor/registrar.html', context)
     
+    # GET request - mostrar formulario limpio
     return render(request, 'proveedor/registrar.html')
 
 @login_required
