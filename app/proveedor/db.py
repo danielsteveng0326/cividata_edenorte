@@ -5,21 +5,48 @@ from django.db import transaction
 from .models import Proveedor
 from .utils import limpiar_datos_proveedor
 
+def get_proveedores_stats():
+    """Obtener estadísticas básicas de proveedores"""
+    try:
+        total = Proveedor.objects.count()
+        activos = Proveedor.objects.filter(activo='true').count()
+        inactivos = total - activos
+        pymes = Proveedor.objects.filter(espyme='true').count()
+        personas_naturales = Proveedor.objects.filter(tipo_empresa='PERSONA NATURAL COLOMBIANA').count()
+        empresas = total - personas_naturales
+        
+        return {
+            'total': total,
+            'activos': activos,
+            'inactivos': inactivos,
+            'pymes': pymes,
+            'personas_naturales': personas_naturales,
+            'empresas': empresas
+        }
+    except Exception as e:
+        print(f"❌ Error obteniendo estadísticas: {str(e)}")
+        return {
+            'total': 0,
+            'activos': 0,
+            'inactivos': 0,
+            'pymes': 0,
+            'personas_naturales': 0,
+            'empresas': 0
+        }
+
 def parse_date(date_string):
-    """
-    Parsea fechas desde strings de la API (siguiendo el patrón de dashboard/db.py)
-    """
+    """Parsea fechas desde strings de la API"""
     if not date_string:
         return None
     
     try:
-        # Intentar diferentes formatos de fecha que puede enviar la API
+        # Intentar diferentes formatos de fecha
         formats = ['%Y-%m-%d', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%S.%f']
         
         for fmt in formats:
             try:
                 parsed_date = datetime.strptime(date_string, fmt)
-                return parsed_date.date()  # Retornar solo la fecha, no datetime
+                return parsed_date.date()
             except ValueError:
                 continue
         
@@ -31,10 +58,7 @@ def parse_date(date_string):
         return None
 
 def map_proveedor_data(data):
-    """
-    Mapea los datos de la API al formato del modelo Proveedor
-    Siguiendo el patrón exacto de dashboard/db.py
-    """
+    """Mapea los datos de la API al formato del modelo Proveedor"""
     try:
         return {
             'nombre': data.get('nombre', ''),
@@ -45,7 +69,7 @@ def map_proveedor_data(data):
             'esta_activa': data.get('esta_activa', 'true'),
             'espyme': data.get('espyme', 'false'),
             
-            # Fechas usando parse_date (tu patrón)
+            # Fechas usando parse_date
             'fecha_creacion': parse_date(data.get('fecha_creacion')),
             
             # Categoría principal
@@ -88,11 +112,55 @@ def map_proveedor_data(data):
         print(f"❌ Error mapeando datos de proveedor: {str(e)}")
         return {}
 
+def process_single_proveedor_data(proveedor_data):
+    """Procesa un solo proveedor desde la API y lo guarda/actualiza en la base de datos"""
+    print(f"🔄 Procesando proveedor individual...")
+    
+    try:
+        # Limpiar datos antes del procesamiento
+        proveedor_data = limpiar_datos_proveedor(proveedor_data)
+        
+        # Mapear datos de la API al formato del modelo
+        mapped_data = map_proveedor_data(proveedor_data)
+        
+        if not mapped_data or not mapped_data.get('nit'):
+            print(f"⚠️ Datos inválidos o sin NIT")
+            return None, "Datos inválidos"
+        
+        nit = mapped_data['nit']
+        
+        # Usar transacción para cada proveedor
+        with transaction.atomic():
+            # Verificar si el proveedor ya existe
+            proveedor_existente = Proveedor.objects.filter(nit=nit).first()
+            
+            if proveedor_existente:
+                # Actualizar proveedor existente
+                print(f"📝 Actualizando proveedor: {nit}")
+                
+                # Actualizar campos
+                for field, value in mapped_data.items():
+                    if hasattr(proveedor_existente, field):
+                        setattr(proveedor_existente, field, value)
+                
+                proveedor_existente.save()
+                return proveedor_existente, "Actualizado"
+                
+            else:
+                # Crear nuevo proveedor
+                print(f"➕ Creando nuevo proveedor: {nit}")
+                
+                nuevo_proveedor = Proveedor.objects.create(**mapped_data)
+                return nuevo_proveedor, "Creado"
+
+    except Exception as e:
+        print(f"❌ Error procesando proveedor: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None, f"Error: {str(e)}"
+
 def process_proveedor_api_data(proveedores_data):
-    """
-    Procesa los datos de la API de proveedores y los guarda en la base de datos
-    Siguiendo el patrón exacto de dashboard/db.py process_api_data
-    """
+    """Procesa los datos de la API de proveedores y los guarda en la base de datos"""
     print(f"🔄 Iniciando procesamiento de {len(proveedores_data)} proveedores...")
     
     nuevos = 0
@@ -114,7 +182,7 @@ def process_proveedor_api_data(proveedores_data):
             
             nit = proveedor_data['nit']
             
-            # Usar transacción para cada proveedor (siguiendo tu patrón)
+            # Usar transacción para cada proveedor
             with transaction.atomic():
                 # Verificar si el proveedor ya existe
                 proveedor_existente = Proveedor.objects.filter(nit=nit).first()
@@ -145,80 +213,3 @@ def process_proveedor_api_data(proveedores_data):
 
     print(f"✅ Procesamiento completado: {nuevos} nuevos, {actualizados} actualizados, {errores} errores")
     return nuevos, actualizados, errores
-
-def process_single_proveedor_data(proveedor_data):
-    """
-    Procesa un solo proveedor desde la API y lo guarda/actualiza en la base de datos
-    Función específica para consultas individuales por NIT
-    """
-    print(f"🔄 Procesando proveedor individual...")
-    
-    try:
-        # Limpiar datos antes del procesamiento
-        proveedor_data = limpiar_datos_proveedor(proveedor_data)
-        
-        # Mapear datos de la API al formato del modelo
-        mapped_data = map_proveedor_data(proveedor_data)
-        
-        if not mapped_data or not mapped_data.get('nit'):
-            print(f"⚠️ Datos inválidos o sin NIT")
-            return None
-        
-        nit = mapped_data['nit']
-        
-        # Usar transacción
-        with transaction.atomic():
-            # Verificar si el proveedor ya existe
-            proveedor_existente = Proveedor.objects.filter(nit=nit).first()
-            
-            if proveedor_existente:
-                # Actualizar proveedor existente
-                print(f"📝 Actualizando proveedor existente: {nit}")
-                
-                for field, value in mapped_data.items():
-                    if hasattr(proveedor_existente, field):
-                        setattr(proveedor_existente, field, value)
-                
-                proveedor_existente.save()
-                return proveedor_existente
-                
-            else:
-                # Crear nuevo proveedor
-                print(f"➕ Creando nuevo proveedor: {nit}")
-                nuevo_proveedor = Proveedor.objects.create(**mapped_data)
-                return nuevo_proveedor
-
-    except Exception as e:
-        print(f"❌ Error procesando proveedor individual: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return None
-
-def get_proveedores_stats():
-    """
-    Obtiene estadísticas de proveedores (siguiendo tu patrón de analytics)
-    """
-    try:
-        total_proveedores = Proveedor.objects.count()
-        activos = Proveedor.objects.filter(esta_activa='true').count()
-        pymes = Proveedor.objects.filter(espyme='true').count()
-        personas_naturales = Proveedor.objects.filter(tipo_empresa='PERSONA NATURAL COLOMBIANA').count()
-        
-        return {
-            'total': total_proveedores,
-            'activos': activos,
-            'inactivos': total_proveedores - activos,
-            'pymes': pymes,
-            'personas_naturales': personas_naturales,
-            'empresas': total_proveedores - personas_naturales
-        }
-    except Exception as e:
-        print(f"❌ Error obteniendo estadísticas: {str(e)}")
-        return {
-            'total': 0,
-            'activos': 0,
-            'inactivos': 0,
-            'pymes': 0,
-            'personas_naturales': 0,
-            'empresas': 0
-        }

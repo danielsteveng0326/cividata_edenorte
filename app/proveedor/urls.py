@@ -21,8 +21,7 @@ urlpatterns = [
     # Listado simple
     path('listar/', views.listar_proveedores, name='listar'),
     
-    # API para sincronización masiva - SOLO ACCESIBLE POR URL, SIN BOTONES
-    # Esta URL está pensada para automatización, no para uso manual
+    # API para sincronización masiva - SOLO ACCESIBLE POR URL
     path('api/sincronizar/', views.api_proveedores, name="api"),
     
     # Vista de tabla con ListView

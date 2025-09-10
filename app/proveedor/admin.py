@@ -4,7 +4,7 @@ from .models import Proveedor
 
 @admin.register(Proveedor)
 class ProveedorAdmin(admin.ModelAdmin):
-    """Admin para Proveedor siguiendo el patrón de ContratoAdmin"""
+    """Admin para Proveedor"""
     
     list_display = [
         'nit',
@@ -42,7 +42,7 @@ class ProveedorAdmin(admin.ModelAdmin):
     readonly_fields = [
         'fecha_registro', 
         'fecha_actualizacion',
-        'codigo'  # Si viene de la API
+        'codigo'
     ]
     
     fieldsets = (
@@ -73,7 +73,7 @@ class ProveedorAdmin(admin.ModelAdmin):
             ),
             'classes': ('collapse',)
         }),
-        ('Información Adicional API', {
+        ('Información Adicional', {
             'fields': (
                 'camaras_comercio',
                 'lista_restrictiva', 
@@ -82,7 +82,7 @@ class ProveedorAdmin(admin.ModelAdmin):
             ),
             'classes': ('collapse',)
         }),
-        ('Control Interno', {
+        ('Fechas y Control', {
             'fields': ('fecha_creacion', 'fecha_registro', 'fecha_actualizacion'),
             'classes': ('collapse',)
         }),
@@ -91,20 +91,44 @@ class ProveedorAdmin(admin.ModelAdmin):
     ordering = ['-fecha_registro']
     
     def get_queryset(self, request):
-        """Optimizar queryset como en ContratoAdmin"""
+        """Optimizar queryset"""
         return super().get_queryset(request)
     
     def has_delete_permission(self, request, obj=None):
-        """Permitir eliminación solo a superusuarios (como en tu patrón)"""
+        """Permitir eliminación solo a superusuarios"""
         return request.user.is_superuser
     
     def get_estado_display(self, obj):
         """Mostrar estado de forma legible"""
-        return obj.get_estado_display()
+        if obj.activo == 'true':
+            return "Activo ✅"
+        else:
+            return "Inactivo ❌"
     get_estado_display.short_description = 'Estado'
     
     def es_pyme_display(self, obj):
         """Mostrar si es PyME"""
-        return "Sí" if obj.es_pyme_display() else "No"
+        return "Sí ✅" if obj.espyme == 'true' else "No ❌"
     es_pyme_display.short_description = 'Es PyME'
     es_pyme_display.boolean = True
+    
+    def save_model(self, request, obj, form, change):
+        """Override save_model para logs"""
+        action = "Actualizado" if change else "Creado"
+        super().save_model(request, obj, form, change)
+        self.message_user(request, f'Proveedor {obj.nit} {action.lower()} exitosamente.')
+    
+    # Acciones personalizadas
+    actions = ['activar_proveedores', 'desactivar_proveedores']
+    
+    def activar_proveedores(self, request, queryset):
+        """Acción para activar proveedores seleccionados"""
+        updated = queryset.update(activo='true')
+        self.message_user(request, f'{updated} proveedores activados.')
+    activar_proveedores.short_description = "Activar proveedores seleccionados"
+    
+    def desactivar_proveedores(self, request, queryset):
+        """Acción para desactivar proveedores seleccionados"""
+        updated = queryset.update(activo='false')
+        self.message_user(request, f'{updated} proveedores desactivados.')
+    desactivar_proveedores.short_description = "Desactivar proveedores seleccionados"

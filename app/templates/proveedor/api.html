@@ -1,163 +1,108 @@
-{% extends "navbar.html" %}
+<!-- templates/proveedor/api.html -->
+{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Sincronización API - Proveedores{% endblock %}
+{% block title %}Sincronización API Proveedores{% endblock %}
 
 {% block content %}
-<!-- Content Header -->
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0">Sincronización API - Proveedores</h1>
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-sync"></i> Sincronización API Proveedores
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard' %}">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Proveedores</a></li>
+                        <li class="breadcrumb-item active">API</li>
+                    </ol>
+                </div>
+            </div>
         </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{% url 'index' %}">Inicio</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'proveedor:index' %}">Proveedores</a></li>
-            <li class="breadcrumb-item active">API Sync</li>
-          </ol>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Main content -->
-  <section class="content">
-    <div class="container-fluid">
-      
-      <!-- Resultado de la sincronización -->
-      <div class="row">
-        <div class="col-md-12">
-          {% if success %}
-          <div class="alert alert-success alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <h5>Sincronización Exitosa</h5>
-            <p>{{ message }}</p>
+    <section class="content">
+        <div class="container-fluid">
             
-            {% if db_response %}
-            <hr>
-            <div class="row">
-              <div class="col-md-4">
-                <div class="info-box bg-success">
-                  <span class="info-box-icon">{{ db_response.0 }}</span>
-                  <div class="info-box-content">
-                    <span class="info-box-text">Nuevos</span>
-                    <span class="info-box-number">Registros</span>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="info-box bg-info">
-                  <span class="info-box-icon">{{ db_response.1 }}</span>
-                  <div class="info-box-content">
-                    <span class="info-box-text">Actualizados</span>
-                    <span class="info-box-number">Registros</span>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="info-box bg-warning">
-                  <span class="info-box-icon">{{ db_response.2 }}</span>
-                  <div class="info-box-content">
-                    <span class="info-box-text">Errores</span>
-                    <span class="info-box-number">Registros</span>
-                  </div>
-                </div>
-              </div>
+            <!-- Resultado de la Sincronización -->
+            {% if success %}
+            <div class="alert alert-success">
+                <h5><i class="fas fa-check-circle"></i> Sincronización Exitosa</h5>
+                <p>{{ message }}</p>
+                {% if db_response %}
+                <ul class="mb-0">
+                    <li><strong>Nuevos:</strong> {{ db_response.0 }}</li>
+                    <li><strong>Actualizados:</strong> {{ db_response.1 }}</li>
+                    <li><strong>Errores:</strong> {{ db_response.2 }}</li>
+                </ul>
+                {% endif %}
+            </div>
+            {% elif error %}
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-exclamation-triangle"></i> Error en Sincronización</h5>
+                <p>{{ error }}</p>
             </div>
             {% endif %}
-          </div>
-          {% else %}
-          <div class="alert alert-danger alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <h5>Error en Sincronización</h5>
-            <p>{{ error }}</p>
-          </div>
-          {% endif %}
-          
-          <!-- Navegación -->
-          <div class="card">
-            <div class="card-body text-center">
-              <h5>¿Qué hacer ahora?</h5>
-              <div class="btn-group" role="group">
-                <a href="{% url 'proveedor:index' %}" class="btn btn-primary">
-                  Ir a Inicio
-                </a>
-                <a href="{% url 'proveedor:listar' %}" class="btn btn-info">
-                  Ver Lista de Proveedores
-                </a>
-              </div>
+
+            <!-- Lista de Proveedores Sincronizados -->
+            {% if list %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-list"></i> Proveedores Procesados
+                        <span class="badge badge-info">{{ list|length }}</span>
+                    </h3>
+                </div>
+                <div class="card-body table-responsive p-0">
+                    <table class="table table-hover text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>NIT</th>
+                                <th>Nombre</th>
+                                <th>Municipio</th>
+                                <th>Estado</th>
+                                <th>Fecha Registro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for proveedor in list %}
+                            <tr>
+                                <td><strong>{{ proveedor.nit }}</strong></td>
+                                <td>{{ proveedor.nombre|truncatechars:40 }}</td>
+                                <td>{{ proveedor.municipio|default:"-" }}</td>
+                                <td>
+                                    {% if proveedor.es_activo %}
+                                        <span class="badge badge-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ proveedor.fecha_registro|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </div>
-          
-          <!-- Lista de proveedores actualizados (si existe) -->
-          {% if list and success %}
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">Proveedores Procesados (Últimos 50)</h3>
+            {% endif %}
+
+            <!-- Botones de Navegación -->
+            <div class="card">
+                <div class="card-body text-center">
+                    <a href="{% url 'proveedor:index' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Volver al Módulo de Proveedores
+                    </a>
+                    <a href="{% url 'proveedor:listar' %}" class="btn btn-info">
+                        <i class="fas fa-list"></i> Ver Todos los Proveedores
+                    </a>
+                </div>
             </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                  <thead>
-                    <tr>
-                      <th>NIT</th>
-                      <th>Nombre</th>
-                      <th>Tipo</th>
-                      <th>Teléfono</th>
-                      <th>Municipio</th>
-                      <th>Fecha Registro</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for proveedor in list %}
-                    <tr>
-                      <td><strong>{{ proveedor.nit }}</strong></td>
-                      <td>
-                        <a href="{% url 'proveedor:detalle' proveedor.id %}">
-                          {{ proveedor.nombre|truncatechars:50 }}
-                        </a>
-                      </td>
-                      <td>
-                        <span class="badge badge-info">
-                          {% if proveedor.tipo_empresa == 'PERSONA NATURAL COLOMBIANA' %}
-                            P. Natural
-                          {% else %}
-                            {{ proveedor.tipo_empresa|truncatechars:15 }}
-                          {% endif %}
-                        </span>
-                      </td>
-                      <td>{{ proveedor.telefono|default:"N/A" }}</td>
-                      <td>{{ proveedor.municipio|default:"N/A" }}</td>
-                      <td>{{ proveedor.fecha_registro|date:"d/m/Y H:i" }}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-          {% endif %}
-          
+
         </div>
-      </div>
-  </section>
-
-<!-- Scripts -->
-<script src="{% static 'lib/adminlt320/plugins/jquery/jquery.min.js' %}"></script>
-<script src="{% static 'lib/bootstrap533dist/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'lib/adminlt320/dist/js/adminlte.min.js' %}"></script>
-
-<script>
-$(document).ready(function() {
-    // Auto-cerrar alertas después de 10 segundos
-    setTimeout(function() {
-        $('.alert').alert('close');
-    }, 10000);
-    
-    console.log('Vista API de sincronización cargada');
-    console.log('Esta funcionalidad está diseñada para automatización');
-});
-</script>
+    </section>
+</div>
 {% endblock %}

@@ -1,247 +1,441 @@
-{% extends "navbar.html" %}
+<!-- templates/proveedor/index.html -->
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Gestión de Proveedores{% endblock %}
 
+{% block extra_css %}
+<style>
+.stats-card {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+.stats-card:hover {
+    transform: translateY(-2px);
+}
+.search-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+.btn-search {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+}
+.btn-search:hover {
+    background: rgba(255,255,255,0.3);
+    color: white;
+}
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<!-- Content Header -->
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0">Gestión de Proveedores</h1>
-        </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{% url 'index' %}">Inicio</a></li>
-            <li class="breadcrumb-item active">Proveedores</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main content -->
-  <section class="content">
-    <div class="container-fluid">
-      <div class="row">
-        <!-- Formulario de consulta por NIT -->
-        <div class="col-md-8">
-          <div class="card card-primary">
-            <div class="card-header">
-              <h3 class="card-title">Consultar Proveedor por NIT</h3>
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">
+                        <i class="fas fa-building"></i> Gestión de Proveedores
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard' %}">Inicio</a></li>
+                        <li class="breadcrumb-item active">Proveedores</li>
+                    </ol>
+                </div>
             </div>
-            <div class="card-body">
-              <form id="consultaNitForm" method="post" action="{% url 'proveedor:consultar_nit' %}">
-                {% csrf_token %}
-                <div class="form-group">
-                  <label for="nit">Número de Identificación Tributaria (NIT)</label>
-                  <div class="input-group">
-                    <input type="text" 
-                           class="form-control" 
-                           id="nit" 
-                           name="nit" 
-                           placeholder="Ej: 900123456"
-                           pattern="[0-9]+"
-                           title="Solo números"
-                           required>
-                    <div class="input-group-append">
-                      <button class="btn btn-primary" type="submit" id="btnConsultar">
-                        Consultar
-                      </button>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            
+            <!-- Estadísticas -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info stats-card">
+                        <div class="inner">
+                            <h3>{{ estadisticas.total|default:0 }}</h3>
+                            <p>Total Proveedores</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-building"></i>
+                        </div>
                     </div>
-                  </div>
-                  <small class="form-text text-muted">
-                    Ingresa el NIT sin dígito de verificación, solo números
-                  </small>
                 </div>
-              </form>
-              
-              <!-- Área de resultados -->
-              <div id="resultadosArea" style="display: none;">
-                <hr>
-                <div id="resultadoConsulta"></div>
-              </div>
-              
-              <!-- Loading spinner -->
-              <div id="loadingSpinner" style="display: none;">
-                <hr>
-                <div class="text-center">
-                  <div class="spinner-border text-primary" role="status">
-                    <span class="sr-only">Consultando...</span>
-                  </div>
-                  <p class="mt-2">Consultando información del proveedor...</p>
+                
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success stats-card">
+                        <div class="inner">
+                            <h3>{{ estadisticas.activos|default:0 }}</h3>
+                            <p>Activos</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
                 </div>
-              </div>
+                
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning stats-card">
+                        <div class="inner">
+                            <h3>{{ estadisticas.pymes|default:0 }}</h3>
+                            <p>PyMEs</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger stats-card">
+                        <div class="inner">
+                            <h3>{{ estadisticas.empresas|default:0 }}</h3>
+                            <p>Empresas</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-city"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-        
-        <!-- Acciones rápidas -->
-        <div class="col-md-4">
-          <div class="card card-success">
-            <div class="card-body text-center">
-              <h5>Registro Manual</h5>
-              <p class="text-muted">¿El proveedor no fue encontrado?</p>
-              <a href="{% url 'proveedor:registrar' %}" class="btn btn-success">
-                Registrar Nuevo Proveedor
-              </a>
-            </div>
-          </div>
-          
-          <div class="card card-info">
-            <div class="card-body text-center">
-              <h5>Proveedores Registrados</h5>
-              <p class="text-muted">Consulta todos los proveedores</p>
-              <a href="{% url 'proveedor:listar' %}" class="btn btn-info">
-                Ver Proveedores
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-  </section>
 
-<!-- Modal para proveedor no encontrado -->
-<div class="modal fade" id="proveedorNoEncontradoModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-warning">
-        <h4 class="modal-title">
-          Proveedor No Encontrado
-        </h4>
-        <button type="button" class="close" data-dismiss="modal">
-          <span>&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>El proveedor con NIT <strong id="nitNoEncontrado"></strong> no fue encontrado en la API.</p>
-        <p>¿Deseas registrarlo manualmente?</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-        <a href="#" id="btnRegistrarManual" class="btn btn-success">
-          Registrar Proveedor
-        </a>
-      </div>
-    </div>
-  </div>
+            <!-- Sección de Búsqueda -->
+            <div class="search-section">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4><i class="fas fa-search"></i> Consulta de Proveedores por NIT</h4>
+                        <p>Busca información de proveedores registrados en el RUP</p>
+                        
+                        <div id="search-form">
+                            <div class="input-group">
+                                <input type="text" 
+                                       id="nit-input" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="Ingrese el NIT sin puntos ni guiones"
+                                       maxlength="15">
+                                <div class="input-group-append">
+                                    <button type="button" 
+                                            id="btn-buscar" 
+                                            class="btn btn-search btn-lg">
+                                        <i class="fas fa-search"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 text-center">
+                        <div class="mt-3">
+                            <a href="{% url 'proveedor:listar' %}" class="btn btn-outline-light btn-lg mb-2 d-block">
+                                <i class="fas fa-list"></i> Ver Todos los Proveedores
+                            </a>
+                            <a href="{% url 'proveedor:registrar' %}" class="btn btn-outline-light btn-lg d-block">
+                                <i class="fas fa-plus"></i> Registrar Proveedor
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultados de Búsqueda -->
+            <div id="search-results" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-info-circle"></i> Información del Proveedor
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" id="close-results">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" id="search-content">
+                        <!-- Los resultados se cargan aquí vía AJAX -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Acciones Rápidas -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <a href="{% url 'proveedor:listar' %}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-table"></i> Ver lista completa de proveedores
+                                </a>
+                                <a href="{% url 'proveedor:registrar' %}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-user-plus"></i> Registrar nuevo proveedor
+                                </a>
+                                <a href="{% url 'admin:proveedor_proveedor_changelist' %}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-cogs"></i> Administrar proveedores
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-pie"></i> Resumen
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Último proveedor registrado:</strong> 
+                               {% if ultimo_proveedor %}
+                                   {{ ultimo_proveedor.nombre|truncatechars:40 }}
+                               {% else %}
+                                   No hay proveedores registrados
+                               {% endif %}
+                            </p>
+                            <p><strong>Proveedores activos:</strong> {{ estadisticas.activos|default:0 }}</p>
+                            <p><strong>Proveedores inactivos:</strong> {{ estadisticas.inactivos|default:0 }}</p>
+                            
+                            {% if estadisticas.total > 0 %}
+                            <div class="progress">
+                                {% widthratio estadisticas.activos estadisticas.total 100 as percentage %}
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ percentage }}%">
+                                    {{ estadisticas.activos|default:0 }} activos
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
 </div>
 
-<!-- Scripts -->
-<script src="{% static 'lib/adminlt320/plugins/jquery/jquery.min.js' %}"></script>
-<script src="{% static 'lib/bootstrap533dist/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'lib/adminlt320/dist/js/adminlte.min.js' %}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.1.4/toastr.min.js"></script>
+<!-- Modal de Error Proveedor No Encontrado - CORREGIDO -->
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="errorModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Proveedor No Encontrado
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-search fa-3x text-warning mb-3"></i>
+                    <p id="error-message">El proveedor no fue encontrado.</p>
+                    <p>¿Desea registrarlo manualmente?</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btn-cancel-error">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <a href="{% url 'proveedor:registrar' %}" class="btn btn-success" id="btn-register-manual">
+                    <i class="fas fa-plus"></i> Registrar Proveedor
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Configurar toastr
-    toastr.options = {
-        "closeButton": true,
-        "timeOut": "5000"
-    };
+    // Configurar CSRF token
+    const csrftoken = $('[name=csrfmiddlewaretoken]').val() || '{{ csrf_token }}';
     
-    // Manejar envío del formulario
-    $('#consultaNitForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        var nit = $('#nit').val().trim();
-        
-        // Validaciones básicas
-        if (!nit) {
-            toastr.error('Por favor ingresa un NIT');
-            return;
-        }
-        
-        if (!/^\d{7,15}$/.test(nit)) {
-            toastr.error('NIT inválido. Solo números, 7-15 dígitos');
-            return;
-        }
-        
-        // Mostrar loading
-        $('#loadingSpinner').show();
-        $('#resultadosArea').hide();
-        $('#btnConsultar').prop('disabled', true).text('Consultando...');
-        
-        // Realizar consulta AJAX
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            data: $(this).serialize(),
-            success: function(response) {
-                $('#loadingSpinner').hide();
-                $('#btnConsultar').prop('disabled', false).text('Consultar');
-                
-                if (response.success) {
-                    if (response.existe_local) {
-                        // Proveedor existe localmente
-                        $('#resultadoConsulta').html(`
-                            <div class="alert alert-success">
-                                <h6>Proveedor encontrado en el sistema</h6>
-                                <p><strong>Nombre:</strong> ${response.proveedor.nombre}</p>
-                                <p><strong>NIT:</strong> ${response.proveedor.nit}</p>
-                                <p><strong>Teléfono:</strong> ${response.proveedor.telefono || 'No disponible'}</p>
-                                <a href="${response.detalle_url}" class="btn btn-primary btn-sm">Ver Detalles</a>
-                            </div>
-                        `);
-                    } else if (response.api_data) {
-                        // Proveedor encontrado en API
-                        var apiData = response.api_data;
-                        $('#resultadoConsulta').html(`
-                            <div class="alert alert-info">
-                                <h6>Proveedor encontrado en API</h6>
-                                <p><strong>Nombre:</strong> ${apiData.nombre}</p>
-                                <p><strong>NIT:</strong> ${apiData.nit}</p>
-                                <p><strong>Teléfono:</strong> ${apiData.telefono || 'No disponible'}</p>
-                                <button class="btn btn-success btn-sm" onclick="registrarDesdeAPI('${nit}')">
-                                    Registrar en Sistema
-                                </button>
-                            </div>
-                        `);
-                    }
-                    $('#resultadosArea').show();
-                } else {
-                    // Proveedor no encontrado
-                    $('#nitNoEncontrado').text(nit);
-                    $('#btnRegistrarManual').attr('href', '{% url "proveedor:registrar" %}?nit=' + nit);
-                    $('#proveedorNoEncontradoModal').modal('show');
-                    toastr.warning(response.error || 'Proveedor no encontrado');
-                }
-            },
-            error: function() {
-                $('#loadingSpinner').hide();
-                $('#btnConsultar').prop('disabled', false).text('Consultar');
-                toastr.error('Error en la consulta. Inténtalo de nuevo.');
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
             }
-        });
+        }
     });
-    
-    // Función para registrar desde API
-    window.registrarDesdeAPI = function(nit) {
-        toastr.info('Registrando proveedor desde API...');
+
+    // Variable para tracking del estado del botón
+    let isSearching = false;
+
+    // Función para cerrar modal de error (SOLUCIÓN AL PROBLEMA)
+    function cerrarModalError() {
+        try {
+            // Método 1: jQuery Bootstrap
+            $('#errorModal').modal('hide');
+            
+            // Método 2: Forzar cierre después de 100ms
+            setTimeout(function() {
+                $('#errorModal').removeClass('show');
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+                $('body').css('padding-right', '');
+            }, 100);
+            
+            console.log('Modal de error cerrado');
+        } catch (error) {
+            console.error('Error cerrando modal:', error);
+            // Fallback: forzar cierre
+            $('#errorModal').hide();
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+        }
+    }
+
+    // Función para mostrar modal de error
+    function mostrarModalError(mensaje) {
+        $('#error-message').text(mensaje);
+        $('#errorModal').modal('show');
+    }
+
+    // Función de búsqueda mejorada
+    function buscarProveedor() {
+        if (isSearching) {
+            console.log('Búsqueda ya en progreso, ignorando...');
+            return;
+        }
+
+        const nit = $('#nit-input').val().trim();
         
+        // Validaciones
+        if (!nit) {
+            mostrarModalError('Por favor ingrese un NIT para buscar.');
+            return;
+        }
+
+        if (!/^\d{7,15}$/.test(nit)) {
+            mostrarModalError('NIT inválido. Solo números, entre 7 y 15 dígitos.');
+            return;
+        }
+
+        // Marcar como en búsqueda
+        isSearching = true;
+        
+        // Cambiar estado del botón
+        const $btnBuscar = $('#btn-buscar');
+        const originalText = $btnBuscar.html();
+        $btnBuscar.html('<span class="spinner-border spinner-border-sm" role="status"></span> Buscando...').prop('disabled', true);
+        
+        // Ocultar resultados anteriores
+        $('#search-results').hide();
+
+        // Realizar petición AJAX
         $.ajax({
-            url: '{% url "proveedor:registrar" %}',
+            url: '{% url "proveedor:consultar_nit" %}',
             method: 'POST',
             data: {
-                'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val(),
                 'nit': nit,
-                'desde_api': 'true'
+                'csrfmiddlewaretoken': csrftoken
             },
+            timeout: 15000, // 15 segundos timeout
             success: function(response) {
                 if (response.success) {
-                    toastr.success('Proveedor registrado exitosamente');
-                    window.location.href = response.redirect_url;
+                    // Mostrar resultados
+                    $('#search-content').html(response.html);
+                    $('#search-results').slideDown();
+                    
+                    // Scroll a resultados
+                    $('html, body').animate({
+                        scrollTop: $('#search-results').offset().top - 20
+                    }, 500);
+                    
                 } else {
-                    toastr.error(response.error || 'Error al registrar');
+                    // Mostrar modal de error
+                    mostrarModalError(response.message || 'No se encontró el proveedor');
                 }
             },
-            error: function() {
-                toastr.error('Error al registrar proveedor');
+            error: function(xhr, status, error) {
+                console.error('Error en búsqueda:', {xhr, status, error});
+                
+                if (status === 'timeout') {
+                    mostrarModalError('La búsqueda está tardando más de lo esperado. Intente nuevamente.');
+                } else {
+                    mostrarModalError('Error de conexión. Verifique su conexión a internet e intente nuevamente.');
+                }
+            },
+            complete: function() {
+                // Restaurar botón
+                $btnBuscar.html(originalText).prop('disabled', false);
+                isSearching = false;
             }
         });
-    };
+    }
+
+    // Event listeners
+    $('#btn-buscar').on('click', buscarProveedor);
+    
+    $('#nit-input').on('keypress', function(e) {
+        if (e.which == 13 && !isSearching) { // Enter key
+            buscarProveedor();
+        }
+    });
+
+    // Prevenir múltiples clicks en Enter
+    $('#nit-input').on('keydown', function(e) {
+        if (e.which == 13) {
+            e.preventDefault();
+        }
+    });
+
+    // Solo permitir números en el input
+    $('#nit-input').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // Cerrar resultados
+    $('#close-results').on('click', function() {
+        $('#search-results').slideUp();
+    });
+
+    // Event listeners para cerrar modal (SOLUCIÓN AL PROBLEMA)
+    $('#btn-cancel-error').on('click', cerrarModalError);
+    $('#errorModal .close').on('click', cerrarModalError);
+    
+    // Cerrar modal con ESC
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $('#errorModal').hasClass('show')) {
+            cerrarModalError();
+        }
+    });
+
+    // Cerrar modal al hacer click fuera
+    $('#errorModal').on('click', function(e) {
+        if (e.target === this) {
+            cerrarModalError();
+        }
+    });
+
+    // Auto-focus en el input
+    $('#nit-input').focus();
+
+    // Mostrar mensaje de error si viene del servidor
+    {% if error %}
+    mostrarModalError('{{ error|escapejs }}');
+    {% endif %}
 });
 </script>
 {% endblock %}
