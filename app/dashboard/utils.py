@@ -2,12 +2,12 @@ import pandas as pd
 from sodapy import Socrata
 
 def api_consulta():
-    client = Socrata("www.datos.gov.co", "OfrpoiiPaNAfK0D6jR7qcl43f")
+    client = Socrata("www.datos.gov.co", "Mt36QkOr3SVBoh78nQAnJfjPG")
     socrata_dataset_identifier = "jbjy-vk9h"
 
     query = """
         SELECT *
-        WHERE fecha_de_firma >= '2024-01-01' AND codigo_entidad = '727001372'
+        WHERE fecha_de_firma >= '2024-01-01' AND nit_entidad = '901831522'
         LIMIT 1000
     """
 
