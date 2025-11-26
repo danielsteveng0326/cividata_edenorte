@@ -40,6 +40,7 @@ class ProveedorAdmin(admin.ModelAdmin):
     ]
     
     readonly_fields = [
+        'fecha_creacion',
         'fecha_registro', 
         'fecha_actualizacion',
         'codigo'
@@ -101,14 +102,14 @@ class ProveedorAdmin(admin.ModelAdmin):
     def get_estado_display(self, obj):
         """Mostrar estado de forma legible"""
         if obj.activo == 'true':
-            return "Activo ✅"
+            return "Activo "
         else:
-            return "Inactivo ❌"
+            return "Inactivo "
     get_estado_display.short_description = 'Estado'
     
     def es_pyme_display(self, obj):
         """Mostrar si es PyME"""
-        return "Sí ✅" if obj.espyme == 'true' else "No ❌"
+        return obj.espyme == 'true'
     es_pyme_display.short_description = 'Es PyME'
     es_pyme_display.boolean = True
     

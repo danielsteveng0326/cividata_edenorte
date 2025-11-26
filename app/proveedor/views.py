@@ -121,59 +121,15 @@ def consultar_nit(request):
             if data_json and len(data_json) > 0:
                 proveedor_data = data_json[0]
                 
-                # Intentar guardar en BD local
-                try:
-                    proveedor_obj, accion = process_single_proveedor_data(proveedor_data)
-                    if proveedor_obj:
-                        print(f"✅ Proveedor {accion.lower()} en BD local")
-                    
-                    html_content = f"""
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5><i class="fas fa-building"></i> {proveedor_data.get('nombre', 'N/A')}</h5>
-                            <p><strong>NIT:</strong> {proveedor_data.get('nit', 'N/A')}</p>
-                            <p><strong>Teléfono:</strong> {proveedor_data.get('telefono', 'No registrado')}</p>
-                            <p><strong>Correo:</strong> {proveedor_data.get('correo', 'No registrado')}</p>
-                            <p><strong>Dirección:</strong> {proveedor_data.get('direccion', 'No registrada')}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Tipo:</strong> {proveedor_data.get('tipo_empresa', 'No especificado')}</p>
-                            <p><strong>Estado:</strong> <span class="badge badge-success">Encontrado en API</span></p>
-                            <p><strong>Es PyME:</strong> {'Sí' if proveedor_data.get('espyme') == 'true' else 'No'}</p>
-                            <div class="mt-3">
-                                <span class="badge badge-info">Consultado desde API RUP</span>
-                                {f'<br><a href="/proveedor/detalle/{proveedor_obj.id}/" class="btn btn-info btn-sm mt-2"><i class="fas fa-eye"></i> Ver Detalles</a>' if proveedor_obj else ''}
-                            </div>
-                        </div>
-                    </div>
-                    """
-                    
-                    return JsonResponse({
-                        'success': True,
-                        'html': html_content,
-                        'source': 'api'
-                    })
-                    
-                except Exception as e:
-                    print(f"⚠️ Error guardando proveedor de API: {str(e)}")
-                    # Aún así devolver los datos de la API
-                    html_content = f"""
-                    <div class="row">
-                        <div class="col-md-12">
-                            <h5><i class="fas fa-building"></i> {proveedor_data.get('nombre', 'N/A')}</h5>
-                            <p><strong>NIT:</strong> {proveedor_data.get('nit', 'N/A')}</p>
-                            <p><strong>Información:</strong> Encontrado en API pero no pudo guardarse en BD local</p>
-                            <p><strong>Error:</strong> {str(e)}</p>
-                        </div>
-                    </div>
-                    """
-                    
-                    return JsonResponse({
-                        'success': True,
-                        'html': html_content,
-                        'source': 'api',
-                        'warning': f'Datos obtenidos pero no guardados: {str(e)}'
-                    })
+                # NO guardar automáticamente, solo retornar los datos para el formulario
+                print(f"📋 Retornando datos de proveedor para formulario: {proveedor_data.get('nombre', 'N/A')}")
+                
+                return JsonResponse({
+                    'success': True,
+                    'source': 'api',
+                    'data': proveedor_data,
+                    'message': 'Proveedor encontrado en API RUP'
+                })
             else:
                 return JsonResponse({
                     'success': False,
@@ -500,3 +456,110 @@ class ProveedorListView(ListView):
         context['search'] = self.request.GET.get('search', '')
         context['tipo_filtro'] = self.request.GET.get('tipo', '')
         return context
+
+@login_required
+@require_POST
+def guardar_proveedor_api(request):
+    """Vista AJAX para guardar proveedor desde datos de la API"""
+    print("💾 Guardando proveedor desde API...")
+    
+    try:
+        # Obtener todos los datos del formulario
+        nombre = request.POST.get('nombre', '').strip()
+        nit = request.POST.get('nit', '').strip()
+        codigo = request.POST.get('codigo', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+        correo = request.POST.get('correo', '').strip()
+        direccion = request.POST.get('direccion', '').strip()
+        sitio_web = request.POST.get('sitio_web', '').strip()
+        
+        # Ubicación
+        pais = request.POST.get('pais', '').strip()
+        departamento = request.POST.get('departamento', '').strip()
+        municipio = request.POST.get('municipio', '').strip()
+        ubicacion = request.POST.get('ubicacion', '').strip()
+        
+        # Tipo de empresa y estados
+        tipo_empresa = request.POST.get('tipo_empresa', '').strip()
+        es_entidad = request.POST.get('es_entidad', 'false')
+        es_grupo = request.POST.get('es_grupo', 'false')
+        esta_activa = request.POST.get('esta_activa', 'true')
+        espyme = request.POST.get('espyme', 'false')
+        
+        # Categoría
+        codigo_categoria_principal = request.POST.get('codigo_categoria_principal', '').strip()
+        descripcion_categoria_principal = request.POST.get('descripcion_categoria_principal', '').strip()
+        
+        # Representante legal
+        nombre_representante_legal = request.POST.get('nombre_representante_legal', '').strip()
+        tipo_doc_representante_legal = request.POST.get('tipo_doc_representante_legal', '').strip()
+        numero_doc_representante_legal = request.POST.get('numero_doc_representante_legal', '').strip()
+        telefono_representante_legal = request.POST.get('telefono_representante_legal', '').strip()
+        correo_representante_legal = request.POST.get('correo_representante_legal', '').strip()
+        
+        # Validaciones básicas
+        if not nombre or not nit:
+            return JsonResponse({
+                'success': False,
+                'message': 'Nombre y NIT son requeridos'
+            })
+        
+        if not validar_nit(nit):
+            return JsonResponse({
+                'success': False,
+                'message': 'Formato de NIT inválido'
+            })
+        
+        # Verificar si ya existe
+        if Proveedor.objects.filter(nit=nit).exists():
+            return JsonResponse({
+                'success': False,
+                'message': f'Ya existe un proveedor con NIT {nit}'
+            })
+        
+        # Crear el proveedor con todos los datos
+        proveedor = Proveedor.objects.create(
+            nombre=nombre,
+            nit=nit,
+            codigo=codigo,
+            telefono=telefono,
+            correo=correo,
+            direccion=direccion,
+            sitio_web=sitio_web,
+            pais=pais,
+            departamento=departamento,
+            municipio=municipio,
+            ubicacion=ubicacion,
+            tipo_empresa=tipo_empresa or 'PERSONA NATURAL COLOMBIANA',
+            es_entidad=es_entidad,
+            es_grupo=es_grupo,
+            esta_activa=esta_activa,
+            espyme=espyme,
+            codigo_categoria_principal=codigo_categoria_principal,
+            descripcion_categoria_principal=descripcion_categoria_principal,
+            nombre_representante_legal=nombre_representante_legal,
+            tipo_doc_representante_legal=tipo_doc_representante_legal,
+            n_mero_doc_representante_legal=numero_doc_representante_legal,
+            telefono_representante_legal=telefono_representante_legal,
+            correo_representante_legal=correo_representante_legal,
+            activo='true'
+        )
+        
+        print(f"✅ Proveedor guardado exitosamente: {proveedor.nombre} (NIT: {proveedor.nit})")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Proveedor {nombre} guardado exitosamente',
+            'proveedor_id': proveedor.id,
+            'redirect_url': f'/proveedor/detalle/{proveedor.id}/'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error guardando proveedor: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al guardar: {str(e)}'
+        })

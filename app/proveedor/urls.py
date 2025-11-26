@@ -12,6 +12,9 @@ urlpatterns = [
     # Consulta de proveedores por NIT (AJAX)
     path('consultar-nit/', views.consultar_nit, name='consultar_nit'),
     
+    # Guardar proveedor desde API (AJAX)
+    path('guardar-proveedor-api/', views.guardar_proveedor_api, name='guardar_proveedor_api'),
+    
     # Detalle y edición
     path('detalle/<int:proveedor_id>/', views.detalle_proveedor, name='detalle'),
     

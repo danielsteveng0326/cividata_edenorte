@@ -1,5 +1,5 @@
 <!-- templates/proveedor/index.html -->
-{% extends 'base.html' %}
+{% extends 'navbar.html' %}
 {% load static %}
 
 {% block title %}Gestión de Proveedores{% endblock %}
@@ -35,13 +35,20 @@
     width: 1rem;
     height: 1rem;
 }
+.gap-2 > * + * {
+    margin-top: 0.5rem !important;
+}
+@media (max-width: 991px) {
+    .search-section .col-lg-4 {
+        margin-top: 1rem;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
-    <!-- Content Header -->
-    <div class="content-header">
+<!-- Content Header -->
+<div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
@@ -51,7 +58,7 @@
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard' %}">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Inicio</a></li>
                         <li class="breadcrumb-item active">Proveedores</li>
                     </ol>
                 </div>
@@ -62,76 +69,24 @@
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
-            
-            <!-- Estadísticas -->
-            <div class="row mb-4">
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-info stats-card">
-                        <div class="inner">
-                            <h3>{{ estadisticas.total|default:0 }}</h3>
-                            <p>Total Proveedores</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-building"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-success stats-card">
-                        <div class="inner">
-                            <h3>{{ estadisticas.activos|default:0 }}</h3>
-                            <p>Activos</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-warning stats-card">
-                        <div class="inner">
-                            <h3>{{ estadisticas.pymes|default:0 }}</h3>
-                            <p>PyMEs</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-industry"></i>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-danger stats-card">
-                        <div class="inner">
-                            <h3>{{ estadisticas.empresas|default:0 }}</h3>
-                            <p>Empresas</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-city"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Sección de Búsqueda -->
             <div class="search-section">
-                <div class="row">
-                    <div class="col-md-8">
-                        <h4><i class="fas fa-search"></i> Consulta de Proveedores por NIT</h4>
-                        <p>Busca información de proveedores registrados en el RUP</p>
+                <div class="row align-items-center">
+                    <div class="col-lg-8 col-md-12 mb-3 mb-lg-0">
+                        <h4 class="mb-3"><i class="fas fa-search"></i> Consulta de Proveedores por NIT</h4>
+                        <p class="mb-3">Busca información de proveedores registrados en el RUP</p>
                         
                         <div id="search-form">
-                            <div class="input-group">
+                            <div class="input-group input-group-lg">
                                 <input type="text" 
                                        id="nit-input" 
-                                       class="form-control form-control-lg" 
+                                       class="form-control" 
                                        placeholder="Ingrese el NIT sin puntos ni guiones"
                                        maxlength="15">
                                 <div class="input-group-append">
                                     <button type="button" 
                                             id="btn-buscar" 
-                                            class="btn btn-search btn-lg">
+                                            class="btn btn-search">
                                         <i class="fas fa-search"></i> Buscar
                                     </button>
                                 </div>
@@ -139,12 +94,12 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-4 text-center">
-                        <div class="mt-3">
-                            <a href="{% url 'proveedor:listar' %}" class="btn btn-outline-light btn-lg mb-2 d-block">
+                    <div class="col-lg-4 col-md-12">
+                        <div class="d-flex flex-column gap-2">
+                            <a href="{% url 'proveedor:listar' %}" class="btn btn-outline-light btn-lg">
                                 <i class="fas fa-list"></i> Ver Todos los Proveedores
                             </a>
-                            <a href="{% url 'proveedor:registrar' %}" class="btn btn-outline-light btn-lg d-block">
+                            <a href="{% url 'proveedor:registrar' %}" class="btn btn-outline-light btn-lg">
                                 <i class="fas fa-plus"></i> Registrar Proveedor
                             </a>
                         </div>
@@ -152,78 +107,143 @@
                 </div>
             </div>
 
-            <!-- Resultados de Búsqueda -->
-            <div id="search-results" style="display: none;">
+            <!-- Resultados de Búsqueda - Proveedor Local -->
+            <div id="search-results-local" style="display: none;">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header bg-success">
                         <h3 class="card-title">
-                            <i class="fas fa-info-circle"></i> Información del Proveedor
+                            <i class="fas fa-check-circle"></i> Proveedor Ya Registrado
                         </h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" id="close-results">
+                            <button type="button" class="btn btn-tool" id="close-results-local">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="card-body" id="search-content">
-                        <!-- Los resultados se cargan aquí vía AJAX -->
+                    <div class="card-body" id="search-content-local">
+                        <!-- Los resultados de BD local se cargan aquí vía AJAX -->
                     </div>
                 </div>
             </div>
 
-            <!-- Sección de Acciones Rápidas -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-bolt"></i> Acciones Rápidas
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="list-group">
-                                <a href="{% url 'proveedor:listar' %}" class="list-group-item list-group-item-action">
-                                    <i class="fas fa-table"></i> Ver lista completa de proveedores
-                                </a>
-                                <a href="{% url 'proveedor:registrar' %}" class="list-group-item list-group-item-action">
-                                    <i class="fas fa-user-plus"></i> Registrar nuevo proveedor
-                                </a>
-                                <a href="{% url 'admin:proveedor_proveedor_changelist' %}" class="list-group-item list-group-item-action">
-                                    <i class="fas fa-cogs"></i> Administrar proveedores
-                                </a>
-                            </div>
+            <!-- Formulario de Proveedor desde API -->
+            <div id="form-proveedor-api" style="display: none;">
+                <div class="card">
+                    <div class="card-header bg-info">
+                        <h3 class="card-title">
+                            <i class="fas fa-edit"></i> Datos del Proveedor (Editable)
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" id="close-form">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-chart-pie"></i> Resumen
-                            </h3>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Los datos fueron obtenidos de la API RUP. Puede modificarlos antes de guardar.
                         </div>
-                        <div class="card-body">
-                            <p><strong>Último proveedor registrado:</strong> 
-                               {% if ultimo_proveedor %}
-                                   {{ ultimo_proveedor.nombre|truncatechars:40 }}
-                               {% else %}
-                                   No hay proveedores registrados
-                               {% endif %}
-                            </p>
-                            <p><strong>Proveedores activos:</strong> {{ estadisticas.activos|default:0 }}</p>
-                            <p><strong>Proveedores inactivos:</strong> {{ estadisticas.inactivos|default:0 }}</p>
+                        
+                        <form id="form-guardar-proveedor">
+                            {% csrf_token %}
                             
-                            {% if estadisticas.total > 0 %}
-                            <div class="progress">
-                                {% widthratio estadisticas.activos estadisticas.total 100 as percentage %}
-                                <div class="progress-bar bg-success" 
-                                     style="width: {{ percentage }}%">
-                                    {{ estadisticas.activos|default:0 }} activos
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="mb-3"><i class="fas fa-building"></i> Información Básica</h5>
+                                    <div class="form-group">
+                                        <label for="nombre">Nombre / Razón Social <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nit">NIT <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="nit" name="nit" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="codigo">Código</label>
+                                        <input type="text" class="form-control" id="codigo" name="codigo">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="tipo_empresa">Tipo de Empresa</label>
+                                        <input type="text" class="form-control" id="tipo_empresa" name="tipo_empresa">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h5 class="mb-3"><i class="fas fa-phone"></i> Información de Contacto</h5>
+                                    <div class="form-group">
+                                        <label for="telefono">Teléfono</label>
+                                        <input type="text" class="form-control" id="telefono" name="telefono">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="correo">Correo Electrónico</label>
+                                        <input type="text" class="form-control" id="correo" name="correo" placeholder="Ej: correo@ejemplo.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="direccion">Dirección</label>
+                                        <textarea class="form-control" id="direccion" name="direccion" rows="2"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="sitio_web">Sitio Web</label>
+                                        <input type="text" class="form-control" id="sitio_web" name="sitio_web" placeholder="Ej: https://www.ejemplo.com">
+                                    </div>
                                 </div>
                             </div>
-                            {% endif %}
-                        </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="mb-3"><i class="fas fa-map-marker-alt"></i> Ubicación</h5>
+                                    <div class="form-group">
+                                        <label for="pais">País</label>
+                                        <input type="text" class="form-control" id="pais" name="pais">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="departamento">Departamento</label>
+                                        <input type="text" class="form-control" id="departamento" name="departamento">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="municipio">Municipio</label>
+                                        <input type="text" class="form-control" id="municipio" name="municipio">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h5 class="mb-3"><i class="fas fa-user-tie"></i> Representante Legal</h5>
+                                    <div class="form-group">
+                                        <label for="nombre_representante_legal">Nombre</label>
+                                        <input type="text" class="form-control" id="nombre_representante_legal" name="nombre_representante_legal">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="telefono_representante_legal">Teléfono</label>
+                                        <input type="text" class="form-control" id="telefono_representante_legal" name="telefono_representante_legal">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="correo_representante_legal">Correo</label>
+                                        <input type="text" class="form-control" id="correo_representante_legal" name="correo_representante_legal" placeholder="Ej: correo@ejemplo.com">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <input type="hidden" id="ubicacion" name="ubicacion">
+                            <input type="hidden" id="es_entidad" name="es_entidad">
+                            <input type="hidden" id="es_grupo" name="es_grupo">
+                            <input type="hidden" id="esta_activa" name="esta_activa">
+                            <input type="hidden" id="espyme" name="espyme">
+                            <input type="hidden" id="codigo_categoria_principal" name="codigo_categoria_principal">
+                            <input type="hidden" id="descripcion_categoria_principal" name="descripcion_categoria_principal">
+                            <input type="hidden" id="tipo_doc_representante_legal" name="tipo_doc_representante_legal">
+                            <input type="hidden" id="numero_doc_representante_legal" name="numero_doc_representante_legal">
+                            
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-success btn-lg" id="btn-guardar-proveedor">
+                                        <i class="fas fa-save"></i> Guardar Proveedor
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-lg" id="btn-cancelar-form">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -312,6 +332,45 @@ $(document).ready(function() {
         $('#errorModal').modal('show');
     }
 
+
+    // Función para llenar el formulario con datos de la API
+    function llenarFormulario(data) {
+        console.log('📝 Llenando formulario con datos:', data);
+        
+        // Información básica
+        $('#nombre').val(data.nombre || '');
+        $('#nit').val(data.nit || '');
+        $('#codigo').val(data.codigo || '');
+        $('#tipo_empresa').val(data.tipo_empresa || '');
+        
+        // Contacto
+        $('#telefono').val(data.telefono || '');
+        $('#correo').val(data.correo || '');
+        $('#direccion').val(data.direccion || '');
+        $('#sitio_web').val(data.sitio_web || '');
+        
+        // Ubicación
+        $('#pais').val(data.pais || '');
+        $('#departamento').val(data.departamento || '');
+        $('#municipio').val(data.municipio || '');
+        $('#ubicacion').val(data.ubicacion || '');
+        
+        // Representante legal
+        $('#nombre_representante_legal').val(data.nombre_representante_legal || '');
+        $('#telefono_representante_legal').val(data.telefono_representante_legal || '');
+        $('#correo_representante_legal').val(data.correo_representante_legal || '');
+        
+        // Campos ocultos
+        $('#es_entidad').val(data.es_entidad || 'false');
+        $('#es_grupo').val(data.es_grupo || 'false');
+        $('#esta_activa').val(data.esta_activa || 'true');
+        $('#espyme').val(data.espyme || 'false');
+        $('#codigo_categoria_principal').val(data.codigo_categoria_principal || '');
+        $('#descripcion_categoria_principal').val(data.descripcion_categoria_principal || '');
+        $('#tipo_doc_representante_legal').val(data.tipo_doc_representante_legal || '');
+        $('#numero_doc_representante_legal').val(data.n_mero_doc_representante_legal || '');
+    }
+
     // Función de búsqueda mejorada
     function buscarProveedor() {
         if (isSearching) {
@@ -341,7 +400,8 @@ $(document).ready(function() {
         $btnBuscar.html('<span class="spinner-border spinner-border-sm" role="status"></span> Buscando...').prop('disabled', true);
         
         // Ocultar resultados anteriores
-        $('#search-results').hide();
+        $('#search-results-local').hide();
+        $('#form-proveedor-api').hide();
 
         // Realizar petición AJAX
         $.ajax({
@@ -354,15 +414,25 @@ $(document).ready(function() {
             timeout: 15000, // 15 segundos timeout
             success: function(response) {
                 if (response.success) {
-                    // Mostrar resultados
-                    $('#search-content').html(response.html);
-                    $('#search-results').slideDown();
-                    
-                    // Scroll a resultados
-                    $('html, body').animate({
-                        scrollTop: $('#search-results').offset().top - 20
-                    }, 500);
-                    
+                    if (response.source === 'local') {
+                        // Proveedor ya existe en BD local
+                        $('#search-content-local').html(response.html);
+                        $('#search-results-local').slideDown();
+                        $('#form-proveedor-api').hide();
+                        
+                        $('html, body').animate({
+                            scrollTop: $('#search-results-local').offset().top - 20
+                        }, 500);
+                    } else if (response.source === 'api') {
+                        // Proveedor encontrado en API - llenar formulario
+                        llenarFormulario(response.data);
+                        $('#form-proveedor-api').slideDown();
+                        $('#search-results-local').hide();
+                        
+                        $('html, body').animate({
+                            scrollTop: $('#form-proveedor-api').offset().top - 20
+                        }, 500);
+                    }
                 } else {
                     // Mostrar modal de error
                     mostrarModalError(response.message || 'No se encontró el proveedor');
@@ -407,8 +477,41 @@ $(document).ready(function() {
     });
 
     // Cerrar resultados
-    $('#close-results').on('click', function() {
-        $('#search-results').slideUp();
+    $('#close-results-local').on('click', function() {
+        $('#search-results-local').slideUp();
+    });
+
+    $('#close-form, #btn-cancelar-form').on('click', function() {
+        $('#form-proveedor-api').slideUp();
+    });
+
+    // Guardar proveedor desde formulario
+    $('#form-guardar-proveedor').on('submit', function(e) {
+        e.preventDefault();
+        
+        const $btnGuardar = $('#btn-guardar-proveedor');
+        const originalText = $btnGuardar.html();
+        $btnGuardar.html('<span class="spinner-border spinner-border-sm"></span> Guardando...').prop('disabled', true);
+        
+        $.ajax({
+            url: '{% url "proveedor:guardar_proveedor_api" %}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.success) {
+                    alert('✅ ' + response.message);
+                    window.location.href = response.redirect_url;
+                } else {
+                    alert('❌ ' + response.message);
+                }
+            },
+            error: function() {
+                alert('❌ Error al guardar el proveedor. Intente nuevamente.');
+            },
+            complete: function() {
+                $btnGuardar.html(originalText).prop('disabled', false);
+            }
+        });
     });
 
     // Event listeners para cerrar modal (SOLUCIÓN AL PROBLEMA)

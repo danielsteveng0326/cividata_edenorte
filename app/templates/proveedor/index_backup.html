@@ -1,0 +1,441 @@
+<!-- templates/proveedor/index.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Proveedores{% endblock %}
+
+{% block extra_css %}
+<style>
+.stats-card {
+ border-radius: 8px;
+ border: none;
+ box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+ transition: transform 0.2s;
+}
+.stats-card:hover {
+ transform: translateY(-2px);
+}
+.search-section {
+ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+ color: white;
+ border-radius: 10px;
+ padding: 30px;
+ margin-bottom: 30px;
+}
+.btn-search {
+ background: rgba(255,255,255,0.2);
+ border: 1px solid rgba(255,255,255,0.3);
+ color: white;
+}
+.btn-search:hover {
+ background: rgba(255,255,255,0.3);
+ color: white;
+}
+.spinner-border-sm {
+ width: 1rem;
+ height: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+ <!-- Content Header -->
+ <div class="content-header">
+ <div class="container-fluid">
+ <div class="row mb-2">
+ <div class="col-sm-6">
+ <h1 class="m-0">
+ <i class="fas fa-building"></i> Gestión de Proveedores
+ </h1>
+ </div>
+ <div class="col-sm-6">
+ <ol class="breadcrumb float-sm-right">
+ <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard' %}">Inicio</a></li>
+ <li class="breadcrumb-item active">Proveedores</li>
+ </ol>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Main content -->
+ <section class="content">
+ <div class="container-fluid">
+ 
+ <!-- Estadísticas -->
+ <div class="row mb-4">
+ <div class="col-lg-3 col-6">
+ <div class="small-box bg-info stats-card">
+ <div class="inner">
+ <h3>{{ estadisticas.total|default:0 }}</h3>
+ <p>Total Proveedores</p>
+ </div>
+ <div class="icon">
+ <i class="fas fa-building"></i>
+ </div>
+ </div>
+ </div>
+ 
+ <div class="col-lg-3 col-6">
+ <div class="small-box bg-success stats-card">
+ <div class="inner">
+ <h3>{{ estadisticas.activos|default:0 }}</h3>
+ <p>Activos</p>
+ </div>
+ <div class="icon">
+ <i class="fas fa-check-circle"></i>
+ </div>
+ </div>
+ </div>
+ 
+ <div class="col-lg-3 col-6">
+ <div class="small-box bg-warning stats-card">
+ <div class="inner">
+ <h3>{{ estadisticas.pymes|default:0 }}</h3>
+ <p>PyMEs</p>
+ </div>
+ <div class="icon">
+ <i class="fas fa-industry"></i>
+ </div>
+ </div>
+ </div>
+ 
+ <div class="col-lg-3 col-6">
+ <div class="small-box bg-danger stats-card">
+ <div class="inner">
+ <h3>{{ estadisticas.empresas|default:0 }}</h3>
+ <p>Empresas</p>
+ </div>
+ <div class="icon">
+ <i class="fas fa-city"></i>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Sección de Búsqueda -->
+ <div class="search-section">
+ <div class="row">
+ <div class="col-md-8">
+ <h4><i class="fas fa-search"></i> Consulta de Proveedores por NIT</h4>
+ <p>Busca información de proveedores registrados en el RUP</p>
+ 
+ <div id="search-form">
+ <div class="input-group">
+ <input type="text" 
+ id="nit-input" 
+ class="form-control form-control-lg" 
+ placeholder="Ingrese el NIT sin puntos ni guiones"
+ maxlength="15">
+ <div class="input-group-append">
+ <button type="button" 
+ id="btn-buscar" 
+ class="btn btn-search btn-lg">
+ <i class="fas fa-search"></i> Buscar
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
+ 
+ <div class="col-md-4 text-center">
+ <div class="mt-3">
+ <a href="{% url 'proveedor:listar' %}" class="btn btn-outline-light btn-lg mb-2 d-block">
+ <i class="fas fa-list"></i> Ver Todos los Proveedores
+ </a>
+ <a href="{% url 'proveedor:registrar' %}" class="btn btn-outline-light btn-lg d-block">
+ <i class="fas fa-plus"></i> Registrar Proveedor
+ </a>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Resultados de Búsqueda -->
+ <div id="search-results" style="display: none;">
+ <div class="card">
+ <div class="card-header">
+ <h3 class="card-title">
+ <i class="fas fa-info-circle"></i> Información del Proveedor
+ </h3>
+ <div class="card-tools">
+ <button type="button" class="btn btn-tool" id="close-results">
+ <i class="fas fa-times"></i>
+ </button>
+ </div>
+ </div>
+ <div class="card-body" id="search-content">
+ <!-- Los resultados se cargan aquí vía AJAX -->
+ </div>
+ </div>
+ </div>
+
+ <!-- Sección de Acciones Rápidas -->
+ <div class="row">
+ <div class="col-md-6">
+ <div class="card">
+ <div class="card-header">
+ <h3 class="card-title">
+ <i class="fas fa-bolt"></i> Acciones Rápidas
+ </h3>
+ </div>
+ <div class="card-body">
+ <div class="list-group">
+ <a href="{% url 'proveedor:listar' %}" class="list-group-item list-group-item-action">
+ <i class="fas fa-table"></i> Ver lista completa de proveedores
+ </a>
+ <a href="{% url 'proveedor:registrar' %}" class="list-group-item list-group-item-action">
+ <i class="fas fa-user-plus"></i> Registrar nuevo proveedor
+ </a>
+ <a href="{% url 'admin:proveedor_proveedor_changelist' %}" class="list-group-item list-group-item-action">
+ <i class="fas fa-cogs"></i> Administrar proveedores
+ </a>
+ </div>
+ </div>
+ </div>
+ </div>
+ 
+ <div class="col-md-6">
+ <div class="card">
+ <div class="card-header">
+ <h3 class="card-title">
+ <i class="fas fa-chart-pie"></i> Resumen
+ </h3>
+ </div>
+ <div class="card-body">
+ <p><strong>Último proveedor registrado:</strong> 
+ {% if ultimo_proveedor %}
+ {{ ultimo_proveedor.nombre|truncatechars:40 }}
+ {% else %}
+ No hay proveedores registrados
+ {% endif %}
+ </p>
+ <p><strong>Proveedores activos:</strong> {{ estadisticas.activos|default:0 }}</p>
+ <p><strong>Proveedores inactivos:</strong> {{ estadisticas.inactivos|default:0 }}</p>
+ 
+ {% if estadisticas.total > 0 %}
+ <div class="progress">
+ {% widthratio estadisticas.activos estadisticas.total 100 as percentage %}
+ <div class="progress-bar bg-success" 
+ style="width: {{ percentage }}%">
+ {{ estadisticas.activos|default:0 }} activos
+ </div>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ </div>
+
+ </div>
+ </section>
+</div>
+
+<!-- Modal de Error Proveedor No Encontrado - CORREGIDO -->
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+ <div class="modal-dialog modal-dialog-centered" role="document">
+ <div class="modal-content">
+ <div class="modal-header bg-warning text-dark">
+ <h5 class="modal-title" id="errorModalLabel">
+ <i class="fas fa-exclamation-triangle"></i> Proveedor No Encontrado
+ </h5>
+ <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+ <span aria-hidden="true">&times;</span>
+ </button>
+ </div>
+ <div class="modal-body">
+ <div class="text-center">
+ <i class="fas fa-search fa-3x text-warning mb-3"></i>
+ <p id="error-message">El proveedor no fue encontrado.</p>
+ <p>¿Desea registrarlo manualmente?</p>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btn-cancel-error">
+ <i class="fas fa-times"></i> Cancelar
+ </button>
+ <a href="{% url 'proveedor:registrar' %}" class="btn btn-success" id="btn-register-manual">
+ <i class="fas fa-plus"></i> Registrar Proveedor
+ </a>
+ </div>
+ </div>
+ </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+ // Configurar CSRF token
+ const csrftoken = $('[name=csrfmiddlewaretoken]').val() || '{{ csrf_token }}';
+ 
+ $.ajaxSetup({
+ beforeSend: function(xhr, settings) {
+ if (!this.crossDomain) {
+ xhr.setRequestHeader("X-CSRFToken", csrftoken);
+ }
+ }
+ });
+
+ // Variable para tracking del estado del botón
+ let isSearching = false;
+
+ // Función para cerrar modal de error (SOLUCIÓN AL PROBLEMA)
+ function cerrarModalError() {
+ try {
+ // Método 1: jQuery Bootstrap
+ $('#errorModal').modal('hide');
+ 
+ // Método 2: Forzar cierre después de 100ms
+ setTimeout(function() {
+ $('#errorModal').removeClass('show');
+ $('.modal-backdrop').remove();
+ $('body').removeClass('modal-open');
+ $('body').css('padding-right', '');
+ }, 100);
+ 
+ console.log('Modal de error cerrado');
+ } catch (error) {
+ console.error('Error cerrando modal:', error);
+ // Fallback: forzar cierre
+ $('#errorModal').hide();
+ $('.modal-backdrop').remove();
+ $('body').removeClass('modal-open');
+ }
+ }
+
+ // Función para mostrar modal de error
+ function mostrarModalError(mensaje) {
+ $('#error-message').text(mensaje);
+ $('#errorModal').modal('show');
+ }
+
+ // Función de búsqueda mejorada
+ function buscarProveedor() {
+ if (isSearching) {
+ console.log('Búsqueda ya en progreso, ignorando...');
+ return;
+ }
+
+ const nit = $('#nit-input').val().trim();
+ 
+ // Validaciones
+ if (!nit) {
+ mostrarModalError('Por favor ingrese un NIT para buscar.');
+ return;
+ }
+
+ if (!/^\d{7,15}$/.test(nit)) {
+ mostrarModalError('NIT inválido. Solo números, entre 7 y 15 dígitos.');
+ return;
+ }
+
+ // Marcar como en búsqueda
+ isSearching = true;
+ 
+ // Cambiar estado del botón
+ const $btnBuscar = $('#btn-buscar');
+ const originalText = $btnBuscar.html();
+ $btnBuscar.html('<span class="spinner-border spinner-border-sm" role="status"></span> Buscando...').prop('disabled', true);
+ 
+ // Ocultar resultados anteriores
+ $('#search-results').hide();
+
+ // Realizar petición AJAX
+ $.ajax({
+ url: '{% url "proveedor:consultar_nit" %}',
+ method: 'POST',
+ data: {
+ 'nit': nit,
+ 'csrfmiddlewaretoken': csrftoken
+ },
+ timeout: 15000, // 15 segundos timeout
+ success: function(response) {
+ if (response.success) {
+ // Mostrar resultados
+ $('#search-content').html(response.html);
+ $('#search-results').slideDown();
+ 
+ // Scroll a resultados
+ $('html, body').animate({
+ scrollTop: $('#search-results').offset().top - 20
+ }, 500);
+ 
+ } else {
+ // Mostrar modal de error
+ mostrarModalError(response.message || 'No se encontró el proveedor');
+ }
+ },
+ error: function(xhr, status, error) {
+ console.error('Error en búsqueda:', {xhr, status, error});
+ 
+ if (status === 'timeout') {
+ mostrarModalError('La búsqueda está tardando más de lo esperado. Intente nuevamente.');
+ } else {
+ mostrarModalError('Error de conexión. Verifique su conexión a internet e intente nuevamente.');
+ }
+ },
+ complete: function() {
+ // Restaurar botón
+ $btnBuscar.html(originalText).prop('disabled', false);
+ isSearching = false;
+ }
+ });
+ }
+
+ // Event listeners
+ $('#btn-buscar').on('click', buscarProveedor);
+ 
+ $('#nit-input').on('keypress', function(e) {
+ if (e.which == 13 && !isSearching) { // Enter key
+ buscarProveedor();
+ }
+ });
+
+ // Prevenir múltiples clicks en Enter
+ $('#nit-input').on('keydown', function(e) {
+ if (e.which == 13) {
+ e.preventDefault();
+ }
+ });
+
+ // Solo permitir números en el input
+ $('#nit-input').on('input', function() {
+ this.value = this.value.replace(/[^0-9]/g, '');
+ });
+
+ // Cerrar resultados
+ $('#close-results').on('click', function() {
+ $('#search-results').slideUp();
+ });
+
+ // Event listeners para cerrar modal (SOLUCIÓN AL PROBLEMA)
+ $('#btn-cancel-error').on('click', cerrarModalError);
+ $('#errorModal .close').on('click', cerrarModalError);
+ 
+ // Cerrar modal con ESC
+ $(document).on('keydown', function(e) {
+ if (e.key === 'Escape' && $('#errorModal').hasClass('show')) {
+ cerrarModalError();
+ }
+ });
+
+ // Cerrar modal al hacer click fuera
+ $('#errorModal').on('click', function(e) {
+ if (e.target === this) {
+ cerrarModalError();
+ }
+ });
+
+ // Auto-focus en el input
+ $('#nit-input').focus();
+
+ // Mostrar mensaje de error si viene del servidor
+ {% if error %}
+ mostrarModalError('{{ error|escapejs }}');
+ {% endif %}
+});
+</script>
+{% endblock %}
