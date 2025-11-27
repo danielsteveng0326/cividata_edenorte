@@ -2,7 +2,7 @@
 # Ejecutar ANTES de iniciar el servidor
 
 Write-Host "Configurando variable de entorno GEMINI_API_KEY..." -ForegroundColor Green
-$env:GEMINI_API_KEY="AIzaSyDHfLmtrYnDgkTWb43DXFftk2XMZGy_4wY"
+$env:GEMINI_API_KEY="AIzaSyB5T7oGZkDoBa48qmP-C1c7uVfZszlwop8"
 
 Write-Host "✅ Variable configurada para esta sesión" -ForegroundColor Green
 Write-Host ""
