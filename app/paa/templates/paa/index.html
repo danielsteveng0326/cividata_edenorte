@@ -1,0 +1,489 @@
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .paa-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+    
+    .paa-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+    
+    .paa-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #007bff;
+    }
+    
+    .paa-header h1 {
+        color: #2c3e50;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .paa-header p {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+    }
+    
+    .upload-zone {
+        display: block;
+        border: 3px dashed #007bff;
+        border-radius: 15px;
+        padding: 60px 30px;
+        text-align: center;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 30px;
+    }
+    
+    .upload-zone:hover {
+        border-color: #0056b3;
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,123,255,0.2);
+    }
+    
+    .upload-zone.dragover {
+        border-color: #28a745;
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    }
+    
+    .upload-icon {
+        font-size: 4rem;
+        color: #007bff;
+        margin-bottom: 20px;
+    }
+    
+    .upload-zone h3 {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+    
+    .upload-zone p {
+        color: #6c757d;
+        font-size: 1rem;
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        display: block;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        padding: 12px 15px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+    
+    .btn-generar {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 20px;
+    }
+    
+    .btn-generar:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0,123,255,0.3);
+    }
+    
+    .btn-generar:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .file-selected {
+        background: #d4edda;
+        border: 2px solid #28a745;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: none;
+    }
+    
+    .file-selected.show {
+        display: block;
+    }
+    
+    .file-selected i {
+        color: #28a745;
+        font-size: 2rem;
+        margin-right: 15px;
+    }
+    
+    .file-info {
+        display: flex;
+        align-items: center;
+    }
+    
+    .file-details {
+        flex: 1;
+    }
+    
+    .file-name {
+        font-weight: 600;
+        color: #155724;
+        font-size: 1.1rem;
+    }
+    
+    .file-size {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .btn-remove {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-remove:hover {
+        background: #c82333;
+    }
+    
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .loading-overlay.show {
+        display: flex;
+    }
+    
+    .loading-content {
+        text-align: center;
+        color: white;
+    }
+    
+    .spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #007bff;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .instructions {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .instructions h4 {
+        color: #856404;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .instructions ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .instructions li {
+        color: #856404;
+        margin-bottom: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Generador de Certificado PAA</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'index' %}">Inicio</a></li>
+                    <li class="breadcrumb-item active">PAA</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="paa-container">
+        <div class="paa-card">
+            <div class="paa-header">
+                <h1><i class="fas fa-file-contract"></i> Certificado PAA</h1>
+                <p>Plan Anual de Adquisiciones - Generación Automática</p>
+            </div>
+            
+            <div class="instructions">
+                <h4><i class="fas fa-info-circle"></i> Instrucciones</h4>
+                <ul>
+                    <li>Cargue un archivo Word (.docx) con el <strong>Estudio Previo</strong></li>
+                    <li>El sistema extraerá automáticamente: objeto, valor, plazo y códigos UNSPSC</li>
+                    <li>Se generará un certificado PAA con el formato oficial</li>
+                    <li>El género y cargo se detectarán automáticamente de su perfil</li>
+                </ul>
+            </div>
+            
+            <form id="paaForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Input file oculto -->
+                <input type="file" id="estudioPrevio" name="estudio_previo" class="file-input" accept=".docx" required>
+                
+                <!-- Zona de carga -->
+                <label for="estudioPrevio" class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>Cargar Estudio Previo</h3>
+                    <p>Haga clic o arrastre el archivo aquí</p>
+                    <p class="text-muted"><small>Solo archivos .docx</small></p>
+                </label>
+                
+                <!-- Archivo seleccionado -->
+                <div class="file-selected" id="fileSelected">
+                    <div class="file-info">
+                        <i class="fas fa-file-word"></i>
+                        <div class="file-details">
+                            <div class="file-name" id="fileName"></div>
+                            <div class="file-size" id="fileSize"></div>
+                        </div>
+                        <button type="button" class="btn-remove" id="btnRemove">
+                            <i class="fas fa-times"></i> Quitar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Botón generar -->
+                <button type="submit" class="btn-generar" id="btnGenerar" disabled>
+                    <i class="fas fa-magic"></i> Generar Certificado PAA
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h3>Procesando documento...</h3>
+        <p>Extrayendo información del estudio previo</p>
+        <p class="text-muted">Esto puede tomar unos segundos</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const uploadZone = $('#uploadZone');
+    const fileInput = $('#estudioPrevio');
+    const fileSelected = $('#fileSelected');
+    const btnGenerar = $('#btnGenerar');
+    const btnRemove = $('#btnRemove');
+    const paaForm = $('#paaForm');
+    const loadingOverlay = $('#loadingOverlay');
+    
+    // El click se maneja automáticamente por el label HTML
+    // No necesitamos evento click aquí
+    
+    // Cambio de archivo
+    fileInput.on('change', function() {
+        if (this.files && this.files[0]) {
+            mostrarArchivo(this.files[0]);
+        }
+    });
+    
+    // Drag and drop
+    uploadZone.on('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('dragover');
+    });
+    
+    uploadZone.on('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+    });
+    
+    uploadZone.on('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.name.endsWith('.docx')) {
+                fileInput[0].files = files;
+                mostrarArchivo(file);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Archivo no válido',
+                    text: 'Solo se permiten archivos .docx'
+                });
+            }
+        }
+    });
+    
+    // Mostrar archivo seleccionado
+    function mostrarArchivo(file) {
+        const fileName = file.name;
+        const fileSize = (file.size / 1024).toFixed(2) + ' KB';
+        
+        $('#fileName').text(fileName);
+        $('#fileSize').text(fileSize);
+        
+        uploadZone.hide();
+        fileSelected.addClass('show');
+        btnGenerar.prop('disabled', false);
+    }
+    
+    // Quitar archivo
+    btnRemove.on('click', function() {
+        fileInput.val('');
+        fileSelected.removeClass('show');
+        uploadZone.show();
+        btnGenerar.prop('disabled', true);
+    });
+    
+    // Enviar formulario
+    paaForm.on('submit', function(e) {
+        e.preventDefault();
+        
+        // Validar que hay archivo
+        if (!fileInput[0].files || fileInput[0].files.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Archivo requerido',
+                text: 'Por favor, cargue el estudio previo'
+            });
+            return;
+        }
+        
+        // Mostrar loading
+        loadingOverlay.addClass('show');
+        
+        // Preparar FormData
+        const formData = new FormData(this);
+        
+        // Enviar petición
+        $.ajax({
+            url: '{% url "paa:generar_certificado" %}',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function(blob, status, xhr) {
+                loadingOverlay.removeClass('show');
+                
+                // Obtener nombre del archivo de la respuesta
+                const disposition = xhr.getResponseHeader('Content-Disposition');
+                let filename = 'Certificado_PAA.docx';
+                if (disposition) {
+                    const filenameMatch = disposition.match(/filename="?(.+)"?/);
+                    if (filenameMatch) {
+                        filename = filenameMatch[1];
+                    }
+                }
+                
+                // Descargar archivo
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // Mostrar éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Certificado generado!',
+                    text: 'El certificado PAA se ha descargado correctamente',
+                    confirmButtonText: 'Generar otro'
+                }).then(() => {
+                    // Resetear formulario
+                    paaForm[0].reset();
+                    btnRemove.click();
+                });
+            },
+            error: function(xhr) {
+                loadingOverlay.removeClass('show');
+                
+                let errorMsg = 'Error al generar el certificado';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMsg
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

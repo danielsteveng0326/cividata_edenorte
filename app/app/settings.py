@@ -54,7 +54,9 @@ INSTALLED_APPS = [
     'login',
     'chatbot',
     'docs_contractual',
-    'proveedor',]
+    'proveedor',
+    'paa',
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -164,6 +166,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # OpenAI API Key para el chatbot
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+
+# Gemini API Key para PAA
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 
 # Logging configuration - PARA DEBUGGING EN PRODUCCIÓN
 LOGGING = {
