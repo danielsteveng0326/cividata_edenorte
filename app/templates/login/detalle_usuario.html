@@ -1,0 +1,157 @@
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0"><i class="fas fa-user mr-2"></i>Detalle de Usuario</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'index' %}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'login:lista_usuarios' %}">Usuarios</a></li>
+                    <li class="breadcrumb-item active">Detalle</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card card-primary card-outline">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            <div class="user-avatar mx-auto mb-3" style="width: 100px; height: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-user" style="font-size: 3rem; color: white;"></i>
+                            </div>
+                        </div>
+
+                        <h3 class="profile-username text-center">{{ usuario.get_full_name }}</h3>
+                        <p class="text-muted text-center">{{ perfil.cargo|default:"Sin cargo asignado" }}</p>
+
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b>Usuario</b> <a class="float-right">{{ usuario.username }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Número ID</b> <a class="float-right">{{ perfil.numero_id }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Estado</b> 
+                                <span class="float-right">
+                                    {% if perfil.activo %}
+                                    <span class="badge badge-success">Activo</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Inactivo</span>
+                                    {% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Módulos</b> <a class="float-right">{{ perfil.modulos_permitidos.count }}</a>
+                            </li>
+                        </ul>
+
+                        <a href="{% url 'login:editar_usuario' usuario.id %}" class="btn btn-primary btn-block">
+                            <i class="fas fa-edit mr-2"></i>Editar Usuario
+                        </a>
+                        <a href="{% url 'login:resetear_password' usuario.id %}" class="btn btn-danger btn-block">
+                            <i class="fas fa-key mr-2"></i>Resetear Contraseña
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>Información Detallada</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong><i class="fas fa-envelope mr-2"></i>Email</strong>
+                                <p class="text-muted">{{ usuario.email|default:"No especificado" }}</p>
+                                <hr>
+
+                                <strong><i class="fas fa-phone mr-2"></i>Teléfono</strong>
+                                <p class="text-muted">{{ perfil.telefono|default:"No especificado" }}</p>
+                                <hr>
+
+                                <strong><i class="fas fa-building mr-2"></i>Departamento</strong>
+                                <p class="text-muted">{{ perfil.departamento|default:"No especificado" }}</p>
+                                <hr>
+                            </div>
+
+                            <div class="col-md-6">
+                                <strong><i class="fas fa-calendar mr-2"></i>Fecha de Creación</strong>
+                                <p class="text-muted">{{ usuario.date_joined|date:"d/m/Y H:i" }}</p>
+                                <hr>
+
+                                <strong><i class="fas fa-user-shield mr-2"></i>Permisos Especiales</strong>
+                                <p class="text-muted">
+                                    {% if perfil.es_superusuario_sistema %}
+                                    <span class="badge badge-danger">Super Usuario del Sistema</span><br>
+                                    {% endif %}
+                                    {% if perfil.puede_gestionar_usuarios %}
+                                    <span class="badge badge-warning">Puede Gestionar Usuarios</span><br>
+                                    {% endif %}
+                                    {% if not perfil.es_superusuario_sistema and not perfil.puede_gestionar_usuarios %}
+                                    <span class="text-muted">Sin permisos especiales</span>
+                                    {% endif %}
+                                </p>
+                                <hr>
+
+                                <strong><i class="fas fa-key mr-2"></i>Estado de Contraseña</strong>
+                                <p class="text-muted">
+                                    {% if perfil.password_temporal %}
+                                    <span class="badge badge-warning">Contraseña Temporal</span>
+                                    {% else %}
+                                    <span class="badge badge-success">Contraseña Actualizada</span>
+                                    {% endif %}
+                                    {% if perfil.fecha_cambio_password %}
+                                    <br><small>Último cambio: {{ perfil.fecha_cambio_password|date:"d/m/Y H:i" }}</small>
+                                    {% endif %}
+                                </p>
+                                <hr>
+                            </div>
+                        </div>
+
+                        <strong><i class="fas fa-th mr-2"></i>Módulos Permitidos</strong>
+                        <div class="mt-2">
+                            {% if perfil.es_superusuario_sistema %}
+                            <span class="badge badge-success badge-lg">Acceso Total a Todos los Módulos</span>
+                            {% else %}
+                                {% for modulo in perfil.modulos_permitidos.all %}
+                                <span class="badge badge-primary badge-lg mr-2 mb-2">
+                                    <i class="{{ modulo.icono }} mr-1"></i>{{ modulo.nombre }}
+                                </span>
+                                {% empty %}
+                                <p class="text-muted">No tiene módulos asignados</p>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-history mr-2"></i>Auditoría</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li><strong>Creado por:</strong> {{ perfil.creado_por.get_full_name|default:"Sistema" }}</li>
+                            <li><strong>Fecha de creación:</strong> {{ perfil.fecha_creacion|date:"d/m/Y H:i" }}</li>
+                            <li><strong>Última modificación:</strong> {{ perfil.fecha_modificacion|date:"d/m/Y H:i" }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

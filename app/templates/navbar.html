@@ -156,14 +156,16 @@
             <small class="text-muted d-block">{{ user.email|default:"Sin email" }}</small>
           </div>
           <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-            <i class="fas fa-user-edit mr-2 text-primary"></i>
-            Mi Perfil
+          <a href="{% url 'login:cambiar_password' %}" class="dropdown-item">
+            <i class="fas fa-key mr-2 text-warning"></i>
+            Cambiar Contraseña
           </a>
-          <a href="#" class="dropdown-item">
-            <i class="fas fa-cog mr-2 text-secondary"></i>
-            Configuración
+          {% if puede_gestionar_usuarios %}
+          <a href="{% url 'login:lista_usuarios' %}" class="dropdown-item">
+            <i class="fas fa-users-cog mr-2 text-info"></i>
+            Gestionar Usuarios
           </a>
+          {% endif %}
           <div class="dropdown-divider"></div>
           <a href="{% url 'login:logout' %}" class="dropdown-item text-danger" id="logout-btn">
             <i class="fas fa-sign-out-alt mr-2"></i>

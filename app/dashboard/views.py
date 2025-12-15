@@ -17,6 +17,7 @@ import csv
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
+from login.decorators import modulo_required
 
 #poner el id de la entidad
 #edenorte = 727001372   #nit = 901831522
@@ -37,6 +38,7 @@ def home(request):
     return render(request, 'navbar.html', {})
 
 @login_required
+@modulo_required('contratacion')
 def dashboard(request):
     try:
         # Filtro base para contratos del año
@@ -201,6 +203,7 @@ def dashboard(request):
         return render(request, 'contract_dash.html', context)
 
 @login_required
+@modulo_required('contratacion')
 def expired(request):
     # Usar date en lugar de timezone.now() para comparaciones de fecha
     fecha_actual = date.today() - timedelta(days=2)
@@ -213,6 +216,7 @@ def expired(request):
     return render(request, 'table_exp.html', {"expired_contract": expired_contract})
 
 @login_required
+@modulo_required('contratacion')
 def expirededur(request):
     """Vista actualizada para mostrar contratos interadministrativos"""
     fecha_actual = date.today() - timedelta(days=2)

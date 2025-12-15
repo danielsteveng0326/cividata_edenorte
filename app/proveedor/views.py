@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from login.decorators import modulo_required
 from django.contrib import messages
 from django.db import transaction
 from django.core.exceptions import ValidationError
@@ -16,6 +17,7 @@ import json
 from datetime import datetime
 
 @login_required
+@modulo_required('proveedores')
 def index(request):
     """Vista principal del módulo de proveedores"""
     print("🚀 Accediendo al módulo de proveedores...")
@@ -49,6 +51,7 @@ def index(request):
         })
 
 @login_required
+@modulo_required('proveedores')
 @require_POST
 def consultar_nit(request):
     """Vista AJAX para consultar proveedor por NIT"""
@@ -161,6 +164,7 @@ def consultar_nit(request):
         })
 
 @login_required
+@modulo_required('proveedores')
 def detalle_proveedor(request, proveedor_id):
     """Vista para mostrar detalles de un proveedor"""
     print(f"👁️ Accediendo a detalle de proveedor ID: {proveedor_id}")

@@ -10,6 +10,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from login.decorators import modulo_required
 from docx import Document
 from docx.shared import Pt
 import google.generativeai as genai
@@ -24,12 +25,14 @@ genai.configure(api_key=API_KEY)
 
 
 @login_required
+@modulo_required('paa')
 def index(request):
     """Vista principal para generar certificado PAA"""
     return render(request, 'paa/index.html')
 
 
 @login_required
+@modulo_required('paa')
 @csrf_exempt
 def generar_certificado(request):
     """Procesa el estudio previo y genera el certificado PAA - VERSIÓN SIMPLIFICADA"""

@@ -4,6 +4,7 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from login.decorators import modulo_required
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
@@ -58,6 +59,7 @@ def formatear_fecha_espanol(fecha):
         return fecha.strftime('%d/%m/%Y') if fecha else 'N/A'
 
 @login_required
+@modulo_required('docs_contractual')
 def docs_contractual_index(request):
     """Vista principal del módulo docs_contractual con filtros y paginación"""
     # Obtener parámetros de filtros

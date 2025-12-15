@@ -1,0 +1,159 @@
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0"><i class="fas fa-user-edit mr-2"></i>{{ titulo }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'index' %}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'login:lista_usuarios' %}">Usuarios</a></li>
+                    <li class="breadcrumb-item active">Editar</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card card-warning">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-user-edit mr-2"></i>Editar Información del Usuario</h3>
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <h5 class="mb-3"><i class="fas fa-id-card mr-2"></i>Datos Personales</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                                        {{ form.first_name }}
+                                        {% if form.first_name.errors %}
+                                        <span class="text-danger">{{ form.first_name.errors.0 }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                                        {{ form.last_name }}
+                                        {% if form.last_name.errors %}
+                                        <span class="text-danger">{{ form.last_name.errors.0 }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Número de Identificación</label>
+                                        <input type="text" class="form-control" value="{{ usuario.perfil.numero_id }}" disabled>
+                                        <small class="form-text text-muted">No se puede modificar</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                                        {{ form.email }}
+                                        {% if form.email.errors %}
+                                        <span class="text-danger">{{ form.email.errors.0 }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
+                                        {{ form.telefono }}
+                                        {% if form.telefono.errors %}
+                                        <span class="text-danger">{{ form.telefono.errors.0 }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.cargo.id_for_label }}">{{ form.cargo.label }}</label>
+                                        {{ form.cargo }}
+                                        {% if form.cargo.errors %}
+                                        <span class="text-danger">{{ form.cargo.errors.0 }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.departamento.id_for_label }}">{{ form.departamento.label }}</label>
+                                {{ form.departamento }}
+                                {% if form.departamento.errors %}
+                                <span class="text-danger">{{ form.departamento.errors.0 }}</span>
+                                {% endif %}
+                            </div>
+
+                            <hr>
+
+                            <h5 class="mb-3"><i class="fas fa-lock mr-2"></i>Permisos y Accesos</h5>
+                            
+                            <div class="form-group">
+                                <label>{{ form.modulos_permitidos.label }}</label>
+                                <div class="row">
+                                    {% for checkbox in form.modulos_permitidos %}
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            {{ checkbox.tag }}
+                                            <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                                {{ checkbox.choice_label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="form-check">
+                                    {{ form.puede_gestionar_usuarios }}
+                                    <label class="form-check-label" for="{{ form.puede_gestionar_usuarios.id_for_label }}">
+                                        {{ form.puede_gestionar_usuarios.label }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="form-check">
+                                    {{ form.activo }}
+                                    <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                                        {{ form.activo.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save mr-2"></i>Guardar Cambios
+                            </button>
+                            <a href="{% url 'login:lista_usuarios' %}" class="btn btn-secondary">
+                                <i class="fas fa-times mr-2"></i>Cancelar
+                            </a>
+                            <a href="{% url 'login:resetear_password' usuario.id %}" class="btn btn-danger float-right">
+                                <i class="fas fa-key mr-2"></i>Resetear Contraseña
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

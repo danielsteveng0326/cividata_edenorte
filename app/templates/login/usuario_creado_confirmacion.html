@@ -1,0 +1,230 @@
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0"><i class="fas fa-user-plus mr-2 text-success"></i>Usuario Creado</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{% url 'index' %}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'login:lista_usuarios' %}">Usuarios</a></li>
+                    <li class="breadcrumb-item active">Usuario Creado</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card card-success">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-check-circle mr-2"></i>Usuario Creado Exitosamente</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success">
+                            <h5><i class="icon fas fa-check"></i> ¡Operación Exitosa!</h5>
+                            El usuario <strong>{{ usuario.get_full_name }}</strong> ha sido creado correctamente en el sistema.
+                        </div>
+
+                        <div class="info-box bg-light">
+                            <span class="info-box-icon bg-success"><i class="fas fa-user"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Nuevo Usuario</span>
+                                <span class="info-box-number">{{ usuario.get_full_name }}</span>
+                                <small>{{ usuario.email }}</small>
+                            </div>
+                        </div>
+
+                        {% if email_enviado %}
+                        <div class="alert alert-info">
+                            <h5><i class="icon fas fa-envelope"></i> Correo de Bienvenida Enviado</h5>
+                            Se ha enviado un correo electrónico a <strong>{{ usuario.email }}</strong> con las credenciales de acceso y la contraseña temporal.
+                            El usuario deberá cambiarla en su primer inicio de sesión.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <h5><i class="icon fas fa-exclamation-triangle"></i> Correo No Enviado</h5>
+                            No se pudo enviar el correo electrónico automáticamente. Por favor, copia las credenciales a continuación y envíalas manualmente al usuario.
+                        </div>
+                        {% endif %}
+
+                        <div class="card card-outline card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="fas fa-key mr-2"></i>Credenciales de Acceso</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Usuario:</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="username-field" value="{{ usuario.username }}" readonly style="font-family: monospace; font-weight: bold; background-color: #f8f9fa;">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-secondary" type="button" onclick="copiarCampo('username-field')">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Contraseña Temporal:</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="password-field" value="{{ password_temporal }}" readonly style="font-family: monospace; font-weight: bold; letter-spacing: 2px; background-color: #f8f9fa;">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-secondary" type="button" onclick="copiarCampo('password-field')">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info mb-0">
+                                    <strong><i class="fas fa-info-circle mr-2"></i>Información Importante:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>El usuario debe usar su <strong>número de identificación</strong> como nombre de usuario</li>
+                                        <li>La contraseña es <strong>temporal</strong> y debe cambiarla en el primer inicio de sesión</li>
+                                        <li>El sistema forzará el cambio de contraseña automáticamente</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if not email_enviado %}
+                        <div class="callout callout-warning">
+                            <h5><i class="fas fa-paper-plane mr-2"></i>Mensaje de Bienvenida para Enviar</h5>
+                            <p>Por favor, envía el siguiente mensaje al usuario:</p>
+                            <div class="bg-light p-3 rounded" style="font-family: monospace; font-size: 0.9rem;">
+                                Hola {{ usuario.get_full_name }},<br><br>
+                                Tu cuenta ha sido creada exitosamente en el sistema CiviData - Edenorte.<br><br>
+                                <strong>Tus credenciales de acceso son:</strong><br>
+                                Usuario: {{ usuario.username }}<br>
+                                Contraseña temporal: {{ password_temporal }}<br><br>
+                                Por seguridad, deberás cambiar tu contraseña en el primer inicio de sesión.<br><br>
+                                Si tienes alguna pregunta, no dudes en contactar al administrador del sistema.<br><br>
+                                Saludos,<br>
+                                Equipo CiviData
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary mt-2" onclick="copiarMensaje()">
+                                <i class="fas fa-copy mr-2"></i>Copiar Mensaje Completo
+                            </button>
+                        </div>
+                        {% endif %}
+
+                        <div class="card card-outline card-info">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="fas fa-th mr-2"></i>Módulos Asignados</h3>
+                            </div>
+                            <div class="card-body">
+                                {% if usuario.perfil.es_superusuario_sistema %}
+                                <span class="badge badge-danger badge-lg">
+                                    <i class="fas fa-crown mr-1"></i>Acceso Total - Superusuario del Sistema
+                                </span>
+                                {% else %}
+                                    {% for modulo in usuario.perfil.modulos_permitidos.all %}
+                                    <span class="badge badge-primary badge-lg mr-2 mb-2">
+                                        <i class="{{ modulo.icono }} mr-1"></i>{{ modulo.nombre }}
+                                    </span>
+                                    {% empty %}
+                                    <p class="text-muted mb-0">No se asignaron módulos específicos</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <a href="{% url 'login:detalle_usuario' usuario.id %}" class="btn btn-primary">
+                            <i class="fas fa-user mr-2"></i>Ver Perfil del Usuario
+                        </a>
+                        <a href="{% url 'login:lista_usuarios' %}" class="btn btn-secondary">
+                            <i class="fas fa-list mr-2"></i>Volver a Lista de Usuarios
+                        </a>
+                        <a href="{% url 'login:crear_usuario' %}" class="btn btn-success">
+                            <i class="fas fa-user-plus mr-2"></i>Crear Otro Usuario
+                        </a>
+                        <button type="button" class="btn btn-info float-right" onclick="copiarCredenciales()">
+                            <i class="fas fa-copy mr-2"></i>Copiar Credenciales
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function copiarCampo(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.select();
+    field.setSelectionRange(0, 99999);
+    
+    navigator.clipboard.writeText(field.value).then(function() {
+        Swal.fire({
+            icon: 'success',
+            title: '¡Copiado!',
+            text: 'Texto copiado al portapapeles',
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    });
+}
+
+function copiarCredenciales() {
+    const credenciales = `Usuario: {{ usuario.username }}\nContraseña: {{ password_temporal }}`;
+    
+    navigator.clipboard.writeText(credenciales).then(function() {
+        Swal.fire({
+            icon: 'success',
+            title: '¡Copiado!',
+            text: 'Credenciales copiadas al portapapeles',
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    });
+}
+
+function copiarMensaje() {
+    const mensaje = `Hola {{ usuario.get_full_name }},
+
+Tu cuenta ha sido creada exitosamente en el sistema CiviData - Edenorte.
+
+Tus credenciales de acceso son:
+Usuario: {{ usuario.username }}
+Contraseña temporal: {{ password_temporal }}
+
+Por seguridad, deberás cambiar tu contraseña en el primer inicio de sesión.
+
+Si tienes alguna pregunta, no dudes en contactar al administrador del sistema.
+
+Saludos,
+Equipo CiviData`;
+    
+    navigator.clipboard.writeText(mensaje).then(function() {
+        Swal.fire({
+            icon: 'success',
+            title: '¡Copiado!',
+            text: 'Mensaje completo copiado al portapapeles',
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    });
+}
+</script>
+{% endblock %}
