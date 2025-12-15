@@ -1,6 +1,9 @@
 import os
 import re
+import json
 import logging
+import tempfile
+import time
 from datetime import datetime
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
@@ -15,6 +18,10 @@ from pathlib import Path
 # Configurar logger
 logger = logging.getLogger(__name__)
 
+# Configurar Gemini API
+API_KEY = "AIzaSyB-5c2Co7MuxWZnleGv_rjdSP7lrfOmRnM"
+genai.configure(api_key=API_KEY)
+
 
 @login_required
 def index(request):
@@ -25,7 +32,11 @@ def index(request):
 @login_required
 @csrf_exempt
 def generar_certificado(request):
-    """Procesa el estudio previo y genera el certificado PAA"""
+    """Procesa el estudio previo y genera el certificado PAA - VERSIÓN SIMPLIFICADA"""
+    print("\n" + "="*60)
+    print("INICIANDO GENERACIÓN DE CERTIFICADO PAA (MODO SIMPLIFICADO)")
+    print("="*60)
+    
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
     
@@ -35,142 +46,286 @@ def generar_certificado(request):
     try:
         # Obtener el archivo cargado
         estudio_previo = request.FILES['estudio_previo']
+        print(f"✓ Archivo recibido: {estudio_previo.name} ({estudio_previo.size} bytes)")
         
         # Validar que sea un archivo .docx
         if not estudio_previo.name.endswith('.docx'):
             return JsonResponse({'error': 'El archivo debe ser un documento Word (.docx)'}, status=400)
         
-        # Leer el contenido del estudio previo
+        # Extraer texto del documento
         try:
-            doc_estudio = Document(estudio_previo)
-            texto_estudio = '\n'.join([para.text for para in doc_estudio.paragraphs])
+            print("✓ Extrayendo texto del documento...")
+            texto_final = extraer_texto_de_docx(estudio_previo)
+            
+            # Buscar códigos UNSPSC en el texto extraído (para debugging)
+            import re
+            codigos_encontrados = re.findall(r'\b\d{8}\b', texto_final)
+            print(f"✓ Códigos de 8 dígitos encontrados en el texto: {codigos_encontrados[:10]}")
+            
         except Exception as e:
-            return JsonResponse({'error': f'Error al leer el documento: {str(e)}'}, status=400)
+            print(f"✗ ERROR al extraer texto: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': f'Error al extraer texto del documento: {str(e)}'}, status=500)
         
         # Extraer información usando Gemini
         try:
-            info_extraida = extraer_informacion_con_gemini(texto_estudio)
+            print("✓ Procesando texto con Gemini...")
+            info_extraida = extraer_informacion_con_gemini_file(texto_final)
         except Exception as e:
+            print(f"✗ ERROR en Gemini: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'error': f'Error al procesar con Gemini: {str(e)}'}, status=500)
         
-        # Obtener información del usuario
-        user = request.user
+        # Información fija del certificado (hardcodeada)
+        nombre_completo = 'ANDRÉS OCAMPO CASTAÑO'
+        cargo = 'PROFESIONAL UNIVERSITARIO SISTEMAS DE INFORMACIÓN'
+        genero = 'EL'
         
-        # Determinar género automáticamente (por defecto EL)
-        # Si el usuario tiene first_name, intentar detectar género común
-        genero = 'EL'  # Por defecto masculino
-        if hasattr(user, 'first_name') and user.first_name:
-            nombre = user.first_name.lower()
-            # Nombres femeninos comunes terminan en 'a'
-            if nombre.endswith('a') and not nombre.endswith('ia'):
-                genero = 'LA'
+        # Convertir lista de códigos UNSPSC a string
+        codigos_unspsc = info_extraida.get('CODIGOS_UNSPSC', [])
+        if isinstance(codigos_unspsc, list):
+            codigos_str = ', '.join(codigos_unspsc)
+        else:
+            codigos_str = str(codigos_unspsc)
         
-        # Cargo por defecto
-        cargo = 'PROFESIONAL UNIVERSITARIO'
-        
-        # Preparar datos para reemplazar
+        # Preparar datos para el certificado (mapeo de campos)
         datos = {
+            'w_nom_funcionario': nombre_completo,
             'w_gen': genero,
             'w_cargo': cargo,
             'w_anno': str(datetime.now().year),
-            'w_codigos': info_extraida.get('codigos', ''),
-            'w_objeto': info_extraida.get('objeto', ''),
-            'w_valor': info_extraida.get('valor', ''),
-            'w_plazo': info_extraida.get('plazo', ''),
-            'w_fecha': generar_fecha_en_letras()
+            'w_codigos': codigos_str,
+            'w_codigo_paa': info_extraida.get('CODIGO_PAA', ''),
+            'w_objeto': info_extraida.get('OBJETO', ''),
+            'w_valor': info_extraida.get('VALOR', ''),
+            'w_plazo': info_extraida.get('PLAZO', ''),
+            'w_fecha': info_extraida.get('FECHA', '')
         }
         
-        # Generar el certificado
+        print("\n" + "="*60)
+        print("DATOS FINALES PARA EL CERTIFICADO:")
+        print("="*60)
+        for key, value in datos.items():
+            print(f"{key}: {str(value)[:100]}..." if len(str(value)) > 100 else f"{key}: {value}")
+        print("="*60 + "\n")
+        
+        # Generar el certificado Word
         try:
+            print("✓ Generando documento PAA...")
             certificado = generar_documento_paa(datos)
+            print("✓ Documento generado exitosamente")
         except FileNotFoundError as e:
-            return JsonResponse({'error': 'No se encontró la plantilla PAA. Por favor, coloque el archivo plantilla_paa.docx en la carpeta correcta.'}, status=500)
+            print(f"✗ ERROR: Plantilla no encontrada - {str(e)}")
+            return JsonResponse({'error': 'No se encontró la plantilla PAA.'}, status=500)
         except Exception as e:
+            print(f"✗ ERROR al generar documento: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'error': f'Error al generar el certificado: {str(e)}'}, status=500)
         
-        # Preparar respuesta
+        # Preparar respuesta Word
+        print("✓ Preparando respuesta HTTP...")
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
         response['Content-Disposition'] = f'attachment; filename="Certificado_PAA_{datetime.now().strftime("%Y%m%d_%H%M%S")}.docx"'
         certificado.save(response)
         
+        print("✓ CERTIFICADO GENERADO EXITOSAMENTE")
+        print("="*60 + "\n")
         return response
         
     except Exception as e:
         # Log detallado del error
+        print("\n" + "="*60)
+        print("✗✗✗ ERROR GENERAL ✗✗✗")
+        print("="*60)
         logger.error(f"Error en generar_certificado: {str(e)}", exc_info=True)
         import traceback
         error_detail = traceback.format_exc()
-        print(f"ERROR DETALLADO:\n{error_detail}")
+        print(f"{error_detail}")
+        print("="*60 + "\n")
         return JsonResponse({'error': f'Error al procesar el documento: {str(e)}'}, status=500)
 
 
-def extraer_informacion_con_gemini(texto_estudio):
-    """Extrae información del estudio previo usando Gemini 2.5 Flash"""
+def extraer_texto_de_docx(archivo_word):
+    """
+    Extrae todo el texto de un archivo .docx (párrafos y tablas).
     
-    # Configurar Gemini con la API key desde settings
-    api_key = getattr(settings, 'GEMINI_API_KEY', None) or os.environ.get('GEMINI_API_KEY')
-    if not api_key:
-        raise ValueError('No se ha configurado la variable de entorno GEMINI_API_KEY. Por favor, configure GEMINI_API_KEY en las variables de entorno del sistema.')
+    Args:
+        archivo_word: Archivo Django UploadedFile (.docx)
+        
+    Returns:
+        str: Texto completo del documento
+    """
+    print("✓ Extrayendo texto del documento Word...")
+    if hasattr(archivo_word, 'seek'):
+        archivo_word.seek(0)
+
+    document = Document(archivo_word)
+    texto_completo = []
+
+    # Extraer párrafos
+    for parrafo in document.paragraphs:
+        texto_completo.append(parrafo.text)
+
+    # Extraer tablas
+    for tabla in document.tables:
+        for fila in tabla.rows:
+            for celda in fila.cells:
+                texto_completo.append(celda.text)
+
+    texto_final = '\n'.join(texto_completo)
+    print(f"✓ Texto extraído: {len(texto_final)} caracteres")
     
-    genai.configure(api_key=api_key)
+    return texto_final
+
+
+def extraer_informacion_con_gemini_file(texto_final):
+    """
+    Extrae información estructurada del estudio previo usando Gemini.
+    Utiliza un prompt preciso para obtener datos en formato JSON.
     
-    # Usar el modelo Gemini 2.5 Flash
+    Args:
+        texto_final: Texto completo extraído del documento Word
+        
+    Returns:
+        dict: Información extraída con claves: CODIGOS_UNSPSC, CODIGO_PAA, OBJETO, VALOR, PLAZO, FECHA
+    """
+    print("✓ Inicializando modelo gemini-2.0-flash-exp...")
     model = genai.GenerativeModel('gemini-2.0-flash-exp')
     
-    # Prompt para extraer información
-    prompt = f"""
-Analiza el siguiente estudio previo y extrae ÚNICAMENTE la siguiente información en formato JSON:
-
-1. **objeto**: El objeto principal del contrato (descripción completa en MAYÚSCULAS)
-2. **valor**: El valor estimado del contrato (solo el número, sin símbolos)
-3. **plazo**: El plazo o duración del contrato (en el formato que aparezca: días, meses, etc.)
-4. **codigos**: Los códigos UNSPSC mencionados o inferidos según la descripción técnica (separados por coma)
-
-IMPORTANTE:
-- Extrae el texto EXACTAMENTE como aparece
-- Si hay varios objetos, selecciona el principal
-- Los códigos UNSPSC deben estar separados por coma
-- Limpia el texto de saltos de línea innecesarios y doble espacios
-- Devuelve SOLO un objeto JSON válido, sin texto adicional
-
-ESTUDIO PREVIO:
-{texto_estudio}
-
-Responde ÚNICAMENTE con un JSON en este formato:
-{{
-    "objeto": "TEXTO DEL OBJETO",
-    "valor": "123456789",
-    "plazo": "12 MESES",
-    "codigos": "12345678, 87654321"
-}}
-"""
-    
-    # Generar respuesta
-    response = model.generate_content(prompt)
-    texto_respuesta = response.text.strip()
-    
-    # Limpiar la respuesta para obtener solo el JSON
-    # Remover markdown code blocks si existen
-    texto_respuesta = re.sub(r'```json\s*', '', texto_respuesta)
-    texto_respuesta = re.sub(r'```\s*', '', texto_respuesta)
-    texto_respuesta = texto_respuesta.strip()
-    
-    # Parsear JSON
-    import json
     try:
-        info = json.loads(texto_respuesta)
-    except json.JSONDecodeError:
-        # Si falla el parsing, intentar extraer manualmente
-        info = {
-            'objeto': 'NO IDENTIFICADO',
-            'valor': '0',
-            'plazo': 'NO ESPECIFICADO',
-            'codigos': ''
+        # 1. Construir prompt estructurado
+        prompt = f"""
+Eres un asistente experto en la extracción de datos de documentos de contratación pública, específicamente "Estudios Previos". Tu objetivo es extraer información clave para rellenar automáticamente un formato de certificado PAA.
+
+INSTRUCCIÓN CLAVE:
+1. Debes analizar el texto proporcionado a continuación y extraer los SEIS (6) campos solicitados.
+2. Tu respuesta debe ser **ESTRICTAMENTE** un objeto JSON válido y nada más. No incluyas preámbulos, explicaciones ni código Markdown adicional (como ```json```).
+3. Utiliza **EXACTAMENTE** las siguientes claves JSON, ya que están mapeadas a la plantilla del certificado:
+
+CLAVES JSON REQUERIDAS y DEFINICIONES DE VALOR:
+
+1. **"CODIGOS_UNSPSC"**: Busca en el texto todos el código o los códigos UNSPSC que existan en todo el documento.
+
+2. **"CODIGO_PAA"**: El código PAA del proyecto. Busca un código que comience con "2025-" seguido de números (ejemplo: "2025-123456"). Si no se encuentra, deja vacío: "".
+
+3. **"OBJETO"**: El texto completo y limpio del objeto del contrato (la descripción de lo que se va a contratar). Debe estar en MAYÚSCULAS.
+
+4. **"VALOR"**: El valor total del contrato. Debe contener la cifra en letras seguida del valor numérico exacto entre paréntesis (ej. "CIENTO ONCE MILLONES TRESCIENTOS SESENTA Y CINCO MIL DOSCIENTOS SETENTA Y TRES PESOS M/L ($ 111.365.273)").
+
+5. **"PLAZO"**: La duración exacta del contrato tal como se especifica en la sección de Plazo (ej. "SIETE (7) MESES CONTADOS A PARTIR DE LA INDICACIÓN DEL ACTA DE INICIO").
+
+6. **"FECHA"**: Extrae la fecha actual en español (ej. "el doce (12) días del mes de diciembre de 2025"). Si no se encuentra una fecha explícita, genera la fecha actual en ese formato.
+
+EJEMPLO DE RESPUESTA ESPERADA:
+{{
+  "CODIGOS_UNSPSC": ["80111600", "70101100"],
+  "CODIGO_PAA": "2025-123456",
+  "OBJETO": "PRESTACIÓN DE SERVICIOS PROFESIONALES...",
+  "VALOR": "CIENTO ONCE MILLONES... ($ 111.365.273)",
+  "PLAZO": "SIETE (7) MESES...",
+  "FECHA": "el doce (12) días del mes de diciembre de 2025"
+}}
+
+IMPORTANTE: Busca cuidadosamente en TODO el texto los códigos UNSPSC. Pueden estar en secciones como "Clasificación UNSPSC", "Códigos", tablas de productos/servicios, o cualquier lugar donde aparezcan números de 8 dígitos relacionados con clasificación de productos.
+
+TEXTO DEL DOCUMENTO A PROCESAR:
+---
+{texto_final}
+---
+
+RESPUESTA (SOLO JSON):
+"""
+        
+        # 3. Enviar a Gemini
+        print("✓ Enviando prompt a Gemini...")
+        response = model.generate_content(prompt)
+        
+        if not response or not response.text:
+            raise Exception("Gemini no devolvió respuesta válida")
+        
+        print(f"✓ Respuesta recibida de Gemini ({len(response.text)} caracteres)")
+        texto_respuesta = response.text.strip()
+        
+        # Imprimir respuesta completa de Gemini para revisión
+        print("\n" + "="*80)
+        print("RESPUESTA COMPLETA DE GEMINI:")
+        print("="*80)
+        print(texto_respuesta)
+        print("="*80 + "\n")
+        
+        # 4. Limpiar respuesta (eliminar markdown si existe)
+        texto_respuesta = re.sub(r'```json\s*', '', texto_respuesta)
+        texto_respuesta = re.sub(r'```\s*', '', texto_respuesta)
+        texto_respuesta = texto_respuesta.strip()
+        
+        # 5. Parsear JSON
+        print("✓ Parseando respuesta JSON...")
+        json_data = json.loads(texto_respuesta)
+        
+        # 6. Validar estructura
+        campos_requeridos = ['CODIGOS_UNSPSC', 'CODIGO_PAA', 'OBJETO', 'VALOR', 'PLAZO', 'FECHA']
+        for campo in campos_requeridos:
+            if campo not in json_data:
+                print(f"⚠️ Campo faltante: {campo}")
+                json_data[campo] = [] if campo == 'CODIGOS_UNSPSC' else ''
+        
+        # 7. Validar y extraer códigos UNSPSC con respaldo
+        codigos = json_data.get('CODIGOS_UNSPSC', [])
+        
+        # Si no se encontraron códigos o está vacío, intentar extracción directa con regex
+        if not codigos or (isinstance(codigos, list) and len(codigos) == 0):
+            print("⚠️ Gemini no encontró códigos UNSPSC. Intentando extracción directa con regex...")
+            codigos_regex = re.findall(r'\b\d{8}\b', texto_final)
+            
+            # Filtrar códigos que probablemente sean UNSPSC (buscar contexto)
+            codigos_validos = []
+            texto_lower = texto_final.lower()
+            for codigo in codigos_regex:
+                idx = texto_final.find(codigo)
+                if idx != -1:
+                    contexto = texto_final[max(0, idx-50):min(len(texto_final), idx+50)].lower()
+                    if 'unspsc' in contexto or 'código' in contexto or 'clasificación' in contexto:
+                        if codigo not in codigos_validos:
+                            codigos_validos.append(codigo)
+            
+            if codigos_validos:
+                json_data['CODIGOS_UNSPSC'] = codigos_validos
+                print(f"✓ Códigos UNSPSC extraídos con regex: {codigos_validos}")
+            else:
+                print(f"⚠️ No se encontraron códigos UNSPSC con contexto. Todos los números de 8 dígitos: {codigos_regex[:5]}")
+        
+        # Mostrar códigos finales
+        codigos = json_data.get('CODIGOS_UNSPSC', [])
+        if isinstance(codigos, list):
+            codigos_str = ', '.join(codigos)
+        else:
+            codigos_str = str(codigos)
+        print(f"\n✓ CÓDIGOS UNSPSC FINALES: {codigos_str}\n")
+        
+        return json_data
+        
+    except json.JSONDecodeError as e:
+        print(f"✗ Error parseando JSON: {str(e)}")
+        print(f"Respuesta recibida: {texto_respuesta[:500]}...")
+        # Retornar estructura por defecto
+        return {
+            'CODIGOS_UNSPSC': [],
+            'CODIGO_PAA': '',
+            'OBJETO': 'NO IDENTIFICADO',
+            'VALOR': '0',
+            'PLAZO': 'NO ESPECIFICADO',
+            'FECHA': generar_fecha_en_letras()
         }
-    
-    return info
+    except Exception as e:
+        print(f"✗ Error al procesar con Gemini: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 def generar_fecha_en_letras():
@@ -260,3 +415,5 @@ def generar_documento_paa(datos):
                             run.text = run.text.replace(placeholder, str(value))
     
     return doc
+
+

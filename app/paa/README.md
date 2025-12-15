@@ -12,8 +12,11 @@ Módulo para generar automáticamente Certificados del Plan Anual de Adquisicion
   - Valor estimado
   - Plazo o duración
   - Códigos UNSPSC
-- **Generación de Certificado**: Crea un documento Word con el formato oficial del PAA
-- **Descarga Automática**: El usuario descarga el certificado generado
+- **Generación de Certificado**: Crea un documento en el formato oficial del PAA
+- **Exportación Múltiple**: Permite exportar el certificado en dos formatos:
+  - **Word (.docx)**: Documento editable
+  - **PDF (.pdf)**: Documento listo para imprimir
+- **Descarga Automática**: El usuario descarga el certificado generado en el formato seleccionado
 
 ## Configuración
 
@@ -56,17 +59,19 @@ Ver `README_PLANTILLA.md` para más detalles sobre la plantilla.
 ## Uso
 
 1. Acceda al módulo desde el menú: **Asistente Contratación > PAA**
-2. Cargue el archivo Word con el Estudio Previo
-3. Seleccione su género (Masculino/Femenino)
-4. Ingrese su cargo
-5. Haga clic en "Generar Certificado PAA"
-6. El sistema procesará el documento y descargará automáticamente el certificado
+2. Cargue el archivo Word con el Estudio Previo (arrastrando o haciendo clic)
+3. Seleccione el formato de salida deseado:
+   - **Word (.docx)**: Para editar o modificar el certificado
+   - **PDF (.pdf)**: Para imprimir o enviar directamente
+4. Haga clic en "Generar Certificado PAA"
+5. El sistema procesará el documento y descargará automáticamente el certificado en el formato seleccionado
 
 ## Tecnologías
 
 - **Django**: Framework web
 - **Gemini 2.5 Flash**: Modelo de IA para extracción de información
 - **python-docx**: Manipulación de documentos Word
+- **docx2pdf**: Conversión de Word a PDF (requiere Microsoft Word en Windows)
 - **jQuery + AJAX**: Interfaz de usuario interactiva
 - **SweetAlert2**: Notificaciones elegantes
 
@@ -110,6 +115,16 @@ paa/
 ### El certificado no se descarga
 - Verifique que el navegador permita descargas automáticas
 - Revise la consola del navegador para errores JavaScript
+
+### Error: "La conversión a PDF no está disponible"
+- Asegúrese de haber instalado `docx2pdf`: `pip install docx2pdf`
+- En Windows, debe tener Microsoft Word instalado
+- En Linux/Mac, considere usar alternativas como `libreoffice` con `subprocess`
+
+### Error al convertir a PDF
+- Verifique que Microsoft Word esté instalado y funcionando correctamente
+- Cierre cualquier instancia de Word que esté abierta
+- Intente reiniciar el servidor Django
 
 ## Mantenimiento
 

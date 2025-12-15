@@ -308,7 +308,7 @@
                 </div>
                 
                 <!-- Botón generar -->
-                <button type="submit" class="btn-generar" id="btnGenerar" disabled>
+                <button type="submit" class="btn-generar" id="btnGenerar" disabled style="margin-top: 20px;">
                     <i class="fas fa-magic"></i> Generar Certificado PAA
                 </button>
             </form>
@@ -460,7 +460,7 @@ $(document).ready(function() {
                 Swal.fire({
                     icon: 'success',
                     title: '¡Certificado generado!',
-                    text: 'El certificado PAA se ha descargado correctamente',
+                    text: 'El certificado PAA se ha descargado correctamente en formato Word',
                     confirmButtonText: 'Generar otro'
                 }).then(() => {
                     // Resetear formulario
